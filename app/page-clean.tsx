@@ -1,0 +1,1 @@
+export default function Home(){return <main dir="rtl"><h1>عقاري</h1><p>سوق كركوك العقاري</p></main>}
