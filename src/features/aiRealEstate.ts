@@ -21,7 +21,7 @@ export function parseIraqiRealEstateQuery(input: string): SmartFilters {
   if (/إيجار|للايجار|للإيجار|مؤجر|تأجير/.test(text)) filters.mode = 'إيجار';
   else if (/بيع|للبيع|شراء|أشتري|اشتري/.test(text)) filters.mode = 'بيع';
   if (/شقة|شقق/.test(text)) filters.category = 'شقق';
-  else if (/أرض|ارض|قطعة/.test(text)) filters.category = 'أراضي';
+  else if (/أرض|ارض|قطعة/.test(text)) filters.category = 'قطع أراضي';
   else if (/محل|محلات|تجاري/.test(text)) filters.category = 'محلات';
   else if (/بيت|منزل|دار|دور/.test(text)) filters.category = 'منازل';
   const priceMatch = text.match(/(?:أقل من|اقل من|حدود|بحدود|ميزانيتي|سعره|سعرها)\s*(\d+(?:\.\d+)?)\s*(مليون|ملايين|مليار|الف|ألف)?/);
