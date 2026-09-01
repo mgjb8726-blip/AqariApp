@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "عقاري",
+    "slug": "aqari-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": { "backgroundColor": "#F7F8FA" },
+    "ios": { "supportsTablet": true },
+    "android": { "adaptiveIcon": { "backgroundColor": "#0B1F33" } },
+    "web": { "bundler": "metro" }
+  }
+}
