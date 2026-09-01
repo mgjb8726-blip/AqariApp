@@ -1,33 +1,3 @@
 'use client';
-import { useMemo, useState } from 'react';
-
-const items = [
-  {type:'منزل',title:'بيت عائلي حديث في الحي الراقي',location:'كركوك - الحي الراقي',price:'385,000,000',area:'250 م²',beds:'4',baths:'3',parking:'2',image:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85'},
-  {type:'أرض',title:'قطعة أرض سكنية مميزة',location:'كركوك - طريق بغداد',price:'95,000,000',area:'300 م²',beds:'',baths:'',parking:'',image:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=85'},
-  {type:'شقة',title:'شقة واسعة جاهزة للسكن',location:'كركوك - دوميز',price:'125,000,000',area:'150 م²',beds:'3',baths:'2',parking:'1',image:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=85'},
-  {type:'محل',title:'محل تجاري على شارع رئيسي',location:'كركوك - طريق بغداد',price:'210,000,000',area:'80 م²',beds:'',baths:'1',parking:'',image:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=85'},
-  {type:'منزل',title:'دار طابقين مع حديقة',location:'كركوك - حي النصر',price:'265,000,000',area:'240 م²',beds:'5',baths:'3',parking:'2',image:'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=85'},
-  {type:'مشتمل',title:'مشتمل مستقل بموقع هادئ',location:'كركوك - الشورجة',price:'70,000,000',area:'100 م²',beds:'2',baths:'1',parking:'1',image:'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1000&q=85'}
-];
-const cats=['الكل','منازل','شقق','قطع أرض','مشتملات','محلات','مخازن'];
-const matches={منازل:'منزل',شقق:'شقة','قطع أرض':'أرض','مشتملات':'مشتمل',محلات:'محل',مخازن:'مخزن'};
-
-export default function Home(){
- const [category,setCategory]=useState('الكل');
- const [query,setQuery]=useState('');
- const [maxPrice,setMaxPrice]=useState('الحد الأقصى للسعر');
- const [location,setLocation]=useState('الموقع');
- const [favorites,setFavorites]=useState([]);
- const [selected,setSelected]=useState(null);
- const [tab,setTab]=useState('home');
- const list=useMemo(()=>items.filter(x=>(category==='الكل'||x.type===matches[category])&&(!query||`${x.title} ${x.location}`.includes(query))&&(!location||location==='الموقع'||x.location.includes(location))&&(!maxPrice||maxPrice==='الحد الأقصى للسعر'||Number(x.price.replaceAll(',',''))<=Number(maxPrice))),[category,query,location,maxPrice]);
- const toggleFav=i=>setFavorites(v=>v.includes(i)?v.filter(x=>x!==i):[...v,i]);
- return <main className="app-shell" dir="rtl">
-  <header className="topbar"><div className="brand"><div className="brand-mark">⌂</div><div><strong>عقاري</strong><small>سوق كركوك</small></div></div><div className="top-actions"><button onClick={()=>setTab('favorites')}>♡ المفضلة</button><button className="post-top" onClick={()=>setTab('add')}>＋ أضف إعلان</button></div></header>
-  <section className="search-area"><h1>ابحث عن عقارك المثالي</h1><p>اكتشف أفضل العقارات في كركوك بسهولة وسرعة</p><div className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن موقع أو اسم منطقة..."/><button>بحث</button></div><div className="quick-filters"><button onClick={()=>setCategory('الكل')}>☷ <span>الفلتر</span></button><select value={maxPrice} onChange={e=>setMaxPrice(e.target.value)}><option>الحد الأقصى للسعر</option><option value="100000000">100 مليون</option><option value="200000000">200 مليون</option><option value="300000000">300 مليون</option><option value="500000000">500 مليون</option></select><select value={location} onChange={e=>setLocation(e.target.value)}><option>الموقع</option><option>الحي الراقي</option><option>طريق بغداد</option><option>دوميز</option><option>حي النصر</option><option>الشورجة</option></select><button className="all-filter" onClick={()=>{setCategory('الكل');setLocation('الموقع');setMaxPrice('الحد الأقصى للسعر')}}>عرض الكل <span>←</span></button></div></section>
-  <section className="content" id="list"><div className="section-heading"><div><span>العقارات المضافة حديثاً</span><h2>استكشف العقارات</h2></div><b>{list.length} عقار</b></div><div className="categories">{cats.map(x=><button key={x} className={category===x?'active':''} onClick={()=>setCategory(x)}>{x}</button>)}</div>{list.length===0?<div className="empty">لا توجد عقارات مطابقة لبحثك.</div>:<div className="property-grid">{list.map((x,i)=><article className="property-card" key={x.title}><div className="property-image"><img src={x.image} alt={x.title}/><span className="sale-badge">للبيع</span><button className={`heart ${favorites.includes(i)?'liked':''}`} onClick={()=>toggleFav(i)} aria-label="إضافة للمفضلة">{favorites.includes(i)?'♥':'♡'}</button><div className="dots"><i className="current"></i><i></i><i></i></div></div><div className="property-body"><div className="location">⌖ {x.location}</div><h3>{x.title}</h3><div className="price">{x.price} <small>د.ع</small></div><div className="specs"><span>▣ <b>{x.area}</b></span>{x.beds&&<span>⌂ <b>{x.beds} غرف</b></span>}{x.baths&&<span>♨ <b>{x.baths} حمام</b></span>}{x.parking&&<span>▱ <b>{x.parking} موقف</b></span>}</div><button className="details" onClick={()=>setSelected(x)}>تفاصيل أكثر <span>←</span></button></div></article>)}</div>}</section>
-  <section className="owner-cta"><div><small>هل لديك عقار؟</small><h2>اعرض عقارك أمام<br/>المشترين في كركوك</h2><p>أضف إعلانك بسهولة ووصل إلى الأشخاص الباحثين عن عقار.</p></div><button onClick={()=>setTab('add')}>＋ أضف عقارك مجاناً</button></section>
-  <nav className="bottom-nav"><button onClick={()=>setTab('more')} className={tab==='more'?'active':''}><span>☰</span><small>المزيد</small></button><button onClick={()=>setTab('favorites')} className={tab==='favorites'?'active':''}><span>♡</span><small>المفضلة</small></button><button className="add-button" onClick={()=>setTab('add')} aria-label="إضافة إعلان">＋</button><button onClick={()=>setTab('messages')} className={tab==='messages'?'active':''}><span>▱</span><small>الرسائل</small></button><button onClick={()=>{setTab('home');window.scrollTo({top:0,behavior:'smooth'})}} className={tab==='home'?'active':''}><span>⌂</span><small>الرئيسية</small></button></nav>
-  {selected&&<div className="modal" onClick={()=>setSelected(null)}><div className="modal-card" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setSelected(null)}>×</button><img src={selected.image} alt=""/><div className="modal-body"><span>{selected.type} · للبيع</span><h2>{selected.title}</h2><p>⌖ {selected.location}</p><strong>{selected.price} د.ع</strong><div className="specs big"><span>▣ {selected.area}</span>{selected.beds&&<span>⌂ {selected.beds} غرف</span>}{selected.baths&&<span>♨ {selected.baths} حمام</span>}{selected.parking&&<span>▱ {selected.parking} موقف</span>}</div><div className="contact-actions"><a href="tel:+9647500000000">اتصال</a><a href="https://wa.me/9647500000000" target="_blank" rel="noreferrer">واتساب</a></div></div></div></div>}
- </main>
-}
+import Complete from './complete/page';
+export default Complete;
