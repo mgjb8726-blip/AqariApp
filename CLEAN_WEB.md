@@ -1,0 +1,1 @@
+Aqari is a Next.js web app for Kirkuk real-estate listings.
