@@ -1,0 +1,8 @@
+(()=>{
+'use strict';
+const style=document.createElement('style');
+style.textContent=`body.aq-night{background:#07111f!important;color:#f3f6fa!important}body.aq-night #root,body.aq-night main,body.aq-night section,body.aq-night article,body.aq-night .card{background-color:#07111f!important;color:#f3f6fa!important}body.aq-night input,body.aq-night select,body.aq-night textarea{background:#102238!important;color:#fff!important;border-color:#2b4864!important}#aq-night-toggle{position:fixed;left:16px;bottom:18px;z-index:99999;border:1px solid #d9a441;background:#071d35;color:#fff;border-radius:999px;padding:11px 15px;font-weight:800;font-size:13px;box-shadow:0 8px 25px #0004;cursor:pointer}body.aq-night #aq-night-toggle{background:#d9a441;color:#071d35}`;
+document.head.appendChild(style);
+function init(){if(document.getElementById('aq-night-toggle'))return;const b=document.createElement('button');b.id='aq-night-toggle';b.type='button';b.textContent=document.body.classList.contains('aq-night')?'☀️ الوضع النهاري':'🌙 الوضع الليلي';b.onclick=()=>{document.body.classList.toggle('aq-night');const on=document.body.classList.contains('aq-night');localStorage.setItem('aqNight',on?'1':'0');b.textContent=on?'☀️ الوضع النهاري':'🌙 الوضع الليلي'};document.body.appendChild(b);if(localStorage.getItem('aqNight')==='1'){document.body.classList.add('aq-night');b.textContent='☀️ الوضع النهاري'}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
