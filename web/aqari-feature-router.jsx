@@ -2,106 +2,135 @@
   'use strict';
 
   const FEATURES = {
-    purchase: ['🏠', 'محاكي شراء العقار'],
-    build: ['🧱', 'حاسبة بناء العقار'],
-    handover: ['🔑', 'تسليم العقار'],
-    dark: ['🌙', 'الوضع الليلي'],
-    exchange: ['🤝', 'مبادلة العقارات'],
-    investment: ['📈', 'الاستثمار العقاري'],
-    daily: ['⭐', 'عقار اليوم']
+    purchase: {icon:'🏠', title:'محاكي شراء العقار', sub:'اعرف شنو تگدر تشتري ضمن ميزانيتك'},
+    build: {icon:'🧱', title:'حاسبة بناء العقار', sub:'قدّر تكلفة البناء قبل ما تبدأ'},
+    handover: {icon:'🔑', title:'تسليم العقار', sub:'قائمة فحص مرتبة لاستلام العقار'},
+    dark: {icon:'🌙', title:'الوضع الليلي', sub:'غيّر مظهر عقاري واحفظ اختيارك'},
+    exchange: {icon:'🤝', title:'مبادلة العقارات', sub:'اعرض عقارك للمبادلة بالتفاصيل الكاملة'},
+    investment: {icon:'📈', title:'الاستثمار العقاري', sub:'احسب العائد السنوي وشوف جدوى الاستثمار'},
+    daily: {icon:'⭐', title:'عقار اليوم', sub:'فرصة مميزة مختارة لهذا اليوم'}
   };
 
-  const money = n => new Intl.NumberFormat('ar-IQ').format(Math.round(Number(n) || 0)) + ' د.ع';
+  const getProps = () => Array.isArray(window.__AQARI_PROPS__) ? window.__AQARI_PROPS__ : [];
+  const money = n => new Intl.NumberFormat('ar-IQ').format(Math.round(Number(n)||0)) + ' د.ع';
   const esc = s => String(s ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[m]));
-  const props = () => Array.isArray(window.__AQARI_PROPS__) ? window.__AQARI_PROPS__ : [];
 
   const css = `
-  #aqfRoot{direction:rtl;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
-  #aqfRoot *{box-sizing:border-box}
-  .aqfMenu{position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;padding:14px}
-  .aqfPanel{width:min(650px,100%);max-height:92vh;overflow:auto;background:linear-gradient(145deg,#06182d,#0a4962);color:#fff;border:1px solid #d9a441;border-radius:28px;padding:20px;box-shadow:0 28px 90px rgba(0,0,0,.45)}
-  .aqfHead{display:flex;align-items:center;justify-content:space-between;gap:12px}.aqfHead b{font-size:21px}.aqfHead small{display:block;opacity:.72;margin-top:4px}
-  .aqfClose,.aqfBack{border:0;border-radius:13px;padding:11px 15px;font-weight:900;cursor:pointer}.aqfClose{background:rgba(255,255,255,.12);color:#fff}.aqfBack{background:#071d35;color:#fff}
-  .aqfGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}.aqfBtn{border:1px solid #31516b;border-radius:19px;background:#102f4d;color:#fff;padding:16px;text-align:right;min-height:116px;cursor:pointer}.aqfBtn:active{transform:scale(.985)}.aqfBtn span{font-size:30px}.aqfBtn b{display:block;margin-top:8px}.aqfBtn small{display:block;margin-top:6px;opacity:.68}
-  .aqfScreen{position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#f7f9fb;color:#101828;padding:16px 14px 70px}.aqfWrap{width:min(650px,100%);margin:auto}.aqfScreen h1{font-size:25px;color:#071d35;margin:20px 0 8px}.aqfScreen p{color:#667085;line-height:1.8}.aqfField{display:block;margin:13px 0}.aqfField span{display:block;font-size:12px;font-weight:900;margin-bottom:6px}.aqfField input,.aqfField select,.aqfField textarea{width:100%;padding:14px;border:1px solid #d0d5dd;border-radius:14px;background:#fff;color:#101828;font:inherit}.aqfField textarea{min-height:115px;resize:vertical}.aqfAction{width:100%;padding:15px;border:0;border-radius:15px;background:#071d35;color:#fff;font-weight:900;cursor:pointer;margin:7px 0 13px}.aqfCard{background:#fff;border:1px solid #e4e7ec;border-radius:18px;padding:15px;margin:11px 0}.aqfCard b{display:block}.aqfCard small{display:block;color:#667085;line-height:1.75;margin:5px 0}.aqfPrice{font-weight:900;color:#071d35}.aqfKpi{display:grid;grid-template-columns:1fr 1fr;gap:9px}.aqfOk{background:#ecfdf3;border:1px solid #abefc6;color:#067647;border-radius:15px;padding:13px;font-weight:900;margin:10px 0}.aqfEmpty{padding:16px;text-align:center;color:#667085;background:#fff;border:1px dashed #d0d5dd;border-radius:16px}
-  body.aqNight{background:#050b13!important;color:#f8fafc!important}body.aqNight #root{background:#050b13!important;color:#f8fafc!important}body.aqNight #root *{border-color:#24384b!important}body.aqNight .aqfScreen{background:#050b13;color:#f8fafc}body.aqNight .aqfScreen h1{color:#fff}body.aqNight .aqfScreen p{color:#aab7c4}body.aqNight .aqfField input,body.aqNight .aqfField select,body.aqNight .aqfField textarea,body.aqNight .aqfCard{background:#0b1724;color:#f8fafc;border-color:#24384b}
-  @media(max-width:520px){.aqfGrid{grid-template-columns:1fr 1fr}.aqfPanel{padding:15px}.aqfBtn{min-height:105px;padding:13px}}
+  #aqFeatureBar{direction:rtl;margin:22px 0 90px;padding:0 2px}
+  #aqFeatureBar .aq-title{display:flex;align-items:end;justify-content:space-between;margin-bottom:12px}
+  #aqFeatureBar h2{margin:0;font-size:21px;color:#071d35}
+  #aqFeatureBar .aq-title span{font-size:12px;color:#708096}
+  #aqFeatureGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .aq-feature-btn{border:1px solid #dfe6ee;background:linear-gradient(145deg,#fff,#f5f8fb);border-radius:20px;padding:15px;text-align:right;min-height:116px;cursor:pointer;box-shadow:0 8px 22px rgba(7,29,53,.07);transition:.18s;position:relative;overflow:hidden}
+  .aq-feature-btn:active{transform:scale(.98)}
+  .aq-feature-btn .ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#071d35;color:#fff;font-size:23px;margin-bottom:9px;box-shadow:0 5px 15px rgba(7,29,53,.18)}
+  .aq-feature-btn strong{display:block;color:#071d35;font-size:14px;margin-bottom:4px}
+  .aq-feature-btn small{display:block;color:#718096;font-size:11px;line-height:1.55}
+  #aqFeatureLayer{position:fixed;inset:0;z-index:2147483000;display:none;background:rgba(3,14,27,.72);backdrop-filter:blur(8px);padding:14px}
+  #aqFeatureLayer.on{display:flex;align-items:flex-end;justify-content:center}
+  #aqFeatureWindow{width:min(620px,100%);max-height:92vh;overflow:auto;background:#f7f9fc;border-radius:28px 28px 18px 18px;box-shadow:0 30px 90px rgba(0,0,0,.38);animation:aqIn .2s ease}
+  @keyframes aqIn{from{transform:translateY(25px);opacity:.2}to{transform:none;opacity:1}}
+  .aq-head{position:sticky;top:0;z-index:2;background:linear-gradient(135deg,#071d35,#0b3150);color:#fff;padding:18px 18px 16px;display:flex;align-items:center;gap:12px}
+  .aq-head .aq-bigico{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;background:#d8ad3d;color:#071d35;font-size:26px}
+  .aq-head h2{margin:0;font-size:19px}.aq-head p{margin:4px 0 0;color:#c8d7e6;font-size:11px}.aq-close{margin-right:auto;border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:12px;width:40px;height:40px;font-size:22px;cursor:pointer}
+  .aq-body{padding:18px}.aq-card{background:#fff;border:1px solid #e1e8f0;border-radius:20px;padding:15px;margin-bottom:12px}.aq-card h3{margin:0 0 10px;color:#071d35;font-size:15px}.aq-note{background:#eef8f7;border-right:4px solid #13a6a1;padding:11px;border-radius:12px;color:#24434a;font-size:12px;line-height:1.7}
+  .aq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.aq-field{display:flex;flex-direction:column;gap:6px}.aq-field.full{grid-column:1/-1}.aq-field label{font-size:11px;color:#64748b}.aq-field input,.aq-field select,.aq-field textarea{width:100%;border:1px solid #d8e1eb;background:#fbfcfe;border-radius:12px;padding:12px;font:inherit;font-size:13px;outline:none}.aq-field textarea{min-height:85px;resize:vertical}.aq-field input:focus,.aq-field select:focus,.aq-field textarea:focus{border-color:#13a6a1;box-shadow:0 0 0 3px rgba(19,166,161,.1)}
+  .aq-primary{width:100%;border:0;border-radius:14px;padding:13px;background:#071d35;color:#fff;font:inherit;font-weight:700;cursor:pointer}.aq-primary.gold{background:#d8ad3d;color:#071d35}.aq-secondary{border:1px solid #d7e0ea;background:#fff;color:#071d35;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer}.aq-result{margin-top:12px;padding:13px;border-radius:15px;background:#071d35;color:#fff;line-height:1.8;font-size:13px}.aq-property{display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:center}.aq-property img{width:86px;height:72px;object-fit:cover;border-radius:13px}.aq-property h4{margin:0 0 4px;color:#071d35;font-size:14px}.aq-property p{margin:0;color:#64748b;font-size:11px;line-height:1.6}.aq-list{display:grid;gap:9px}.aq-check{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid #e4eaf0;border-radius:12px;background:#fff;font-size:12px}.aq-check input{width:18px;height:18px;accent-color:#13a6a1}
+  .aq-dark-preview{border-radius:18px;background:#071d35;color:#fff;padding:17px}.aq-dark-preview b{color:#d8ad3d}
+  @media(max-width:430px){#aqFeatureGrid{grid-template-columns:1fr 1fr}.aq-grid{grid-template-columns:1fr 1fr}.aq-body{padding:14px}}
   `;
-  if(!document.getElementById('aqfStyle')){const s=document.createElement('style');s.id='aqfStyle';s.textContent=css;document.head.appendChild(s)}
 
-  const night = () => { try { return localStorage.getItem('aqNight') === '1'; } catch { return false; } };
-  const applyNight = () => document.body.classList.toggle('aqNight', night());
-  const setNight = v => { try { localStorage.setItem('aqNight', v ? '1' : '0'); } catch {} applyNight(); };
-  applyNight();
+  function injectStyle(){if(document.getElementById('aq-feature-style'))return;const s=document.createElement('style');s.id='aq-feature-style';s.textContent=css;document.head.appendChild(s)}
 
-  function close(){ document.querySelectorAll('.aqfMenu,.aqfScreen').forEach(x=>x.remove()); }
+  function closeFeature(){const layer=document.getElementById('aqFeatureLayer');if(layer){layer.classList.remove('on');setTimeout(()=>{if(!layer.classList.contains('on'))layer.style.display='none'},180)}}
 
-  function menu(){
-    close();
-    const r=document.createElement('div'); r.id='aqfRoot'; r.className='aqfMenu';
-    r.innerHTML=`<section class="aqfPanel"><div class="aqfHead"><div><b>مميزات عقاري الذكية</b><small>اضغط على أي ميزة لفتح الأداة التفاعلية مباشرة</small></div><button class="aqfClose" data-aq-close>✕</button></div><div class="aqfGrid">${Object.entries(FEATURES).map(([id,f])=>`<button type="button" class="aqfBtn" data-aq-feature="${id}"><span>${f[0]}</span><b>${f[1]}</b><small>${id==='dark'?'تبديل مباشر للوضع الليلي':'فتح الأداة التفاعلية'}</small></button>`).join('')}</div></section>`;
-    document.body.appendChild(r);
+  function shell(f, body){
+    const layer=document.getElementById('aqFeatureLayer');
+    layer.style.display='flex';
+    requestAnimationFrame(()=>layer.classList.add('on'));
+    document.getElementById('aqFeatureWindow').innerHTML=`<div class="aq-head"><div class="aq-bigico">${f.icon}</div><div><h2>${f.title}</h2><p>${f.sub}</p></div><button class="aq-close" id="aqClose" aria-label="إغلاق">×</button></div><div class="aq-body">${body}</div>`;
+    document.getElementById('aqClose').onclick=closeFeature;
   }
 
-  function screen(id){
-    if(id==='dark'){ setNight(!night()); return; }
-    close();
-    const f=FEATURES[id], p=props();
-    const r=document.createElement('div'); r.id='aqfRoot'; r.className='aqfScreen';
-    let body=`<div class="aqfWrap"><button type="button" class="aqfBack" data-aq-back>→ رجوع</button><h1>${f[0]} ${f[1]}</h1>`;
-
-    if(id==='purchase') body+=`<p>أدخل ميزانيتك واختر نوع العقار، وسيعرض لك التطبيق العقارات المناسبة من البيانات المتاحة.</p><label class="aqfField"><span>نوع العقار</span><select id="pType"><option value="all">كل الأنواع</option>${[...new Set(p.map(x=>x.c).filter(Boolean))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></label><label class="aqfField"><span>الميزانية القصوى</span><input id="pBudget" type="number" inputmode="numeric" placeholder="مثال: 200000000"></label><button type="button" class="aqfAction" id="pRun">🔎 إظهار العقارات المناسبة</button><div id="pOut"></div>`;
-
-    if(id==='build') body+=`<p>احسب مساحة البناء التقريبية الممكنة حسب ميزانيتك وسعر المتر. النتيجة تقديرية وليست عرض سعر هندسي.</p><label class="aqfField"><span>نوع البناء</span><select id="bType"><option>بيت سكني</option><option>فيلا</option><option>مشتمل</option><option>شقق</option></select></label><label class="aqfField"><span>الميزانية</span><input id="bBudget" type="number" inputmode="numeric" placeholder="مثال: 150000000"></label><label class="aqfField"><span>سعر المتر التقديري</span><input id="bRate" type="number" inputmode="numeric" value="750000"></label><button type="button" class="aqfAction" id="bRun">🧮 احسب الآن</button><div id="bOut"></div>`;
-
-    if(id==='handover') body+=`<p>أنشئ محضر تسليم مرتب وحدد البنود التي تم فحصها قبل إتمام التسليم.</p><label class="aqfField"><span>العقار</span><select id="hProp">${p.map(x=>`<option value="${esc(x.id)}">${esc(x.t)} — ${money(x.p)}</option>`).join('')}</select></label><div class="aqfCard">${['مطابقة هوية الأطراف','مراجعة سند الملكية','فحص حالة العقار','الكهرباء والماء','المفاتيح','العدادات','توقيع محضر التسليم'].map((x,i)=>`<label style="display:block;padding:11px 0;border-bottom:1px solid #eee"><input type="checkbox" data-h="${i}"> ${x}</label>`).join('')}</div><label class="aqfField"><span>ملاحظات</span><textarea id="hNote" placeholder="اكتب الملاحظات..."></textarea></label><button type="button" class="aqfAction" id="hSave">💾 حفظ محضر التسليم</button><div id="hOut"></div>`;
-
-    if(id==='exchange') body+=`<p>سجّل مواصفات عقارك بالكامل. أي خانة غير متوفرة يمكن تركها فارغة أو كتابة «غير متوفر في عقاري».</p><div class="aqfKpi"><label class="aqfField"><span>نوع العقار</span><select id="eType"><option>بيت</option><option>شقة</option><option>أرض</option><option>فيلا</option><option>مشتمل</option></select></label><label class="aqfField"><span>الموقع</span><input id="eLoc" placeholder="المنطقة / الحي"></label></div><div class="aqfKpi"><label class="aqfField"><span>المساحة م²</span><input id="eArea" type="number" placeholder="غير متوفر"></label><label class="aqfField"><span>السعر التقريبي</span><input id="ePrice" type="number" placeholder="غير متوفر"></label></div>${[['غرف النوم','eBeds'],['غرف المعيشة','eLiving'],['الحمامات','eBath'],['المطابخ','eKitchen'],['الطوابق','eFloors'],['الساحات / المناور','eCourts']].map(a=>`<label class="aqfField"><span>${a[0]}</span><input id="${a[1]}" type="number" placeholder="غير متوفر"></label>`).join('')}<div class="aqfCard">${['كراج','حديقة','سطح','مفروش'].map((x,i)=>`<label style="display:block;padding:9px"><input type="checkbox" id="eX${i}"> ${x}</label>`).join('')}</div><label class="aqfField"><span>المميزات والإضافات</span><textarea id="eExtra" placeholder="مثال: مولدة، تدفئة، تكييف... أو غير متوفر في عقاري"></textarea></label><label class="aqfField"><span>معلومات أخرى وشروط المبادلة</span><textarea id="eNote" placeholder="ما العقار المطلوب بالمقابل؟ هل تقبل فرق سعر؟"></textarea></label><button type="button" class="aqfAction" id="eSave">🤝 حفظ طلب المبادلة</button><div id="eOut"></div>`;
-
-    if(id==='investment') body+=`<p>أدخل سعر الشراء والإيجار والمصاريف لتحصل على العائد السنوي التقريبي وفترة استرداد رأس المال.</p><label class="aqfField"><span>سعر الشراء</span><input id="iBuy" type="number" inputmode="numeric" placeholder="مثال: 200000000"></label><label class="aqfField"><span>الإيجار الشهري المتوقع</span><input id="iRent" type="number" inputmode="numeric" placeholder="مثال: 1000000"></label><label class="aqfField"><span>المصاريف السنوية</span><input id="iCost" type="number" inputmode="numeric" placeholder="مثال: 2000000"></label><button type="button" class="aqfAction" id="iRun">📈 احسب الجدوى الاستثمارية</button><div id="iOut"></div>`;
-
+  function openFeature(id){
+    const f=FEATURES[id];if(!f)return;
+    const ps=getProps();
+    if(id==='purchase')return shell(f,`<div class="aq-card"><h3>حدد ميزانيتك</h3><div class="aq-grid"><div class="aq-field"><label>نوع العقار</label><select id="pType"><option value="الكل">كل الأنواع</option><option>منازل</option><option>شقق</option><option>قطع أراضي</option><option>مشتملات</option><option>محلات</option><option>مخازن</option></select></div><div class="aq-field"><label>الميزانية القصوى (مليون)</label><input id="pBudget" type="number" inputmode="numeric" placeholder="مثال: 200"></div></div><button class="aq-primary gold" id="pRun" style="margin-top:12px">اعرض العقارات المناسبة</button><div id="pOut"></div></div><div class="aq-note">المحاكي يستخدم العقارات الموجودة حالياً داخل موقع عقاري ويعرض الخيارات الأقرب لميزانيتك.</div>`);
+    if(id==='build')return shell(f,`<div class="aq-card"><h3>تقدير أولي للبناء</h3><div class="aq-grid"><div class="aq-field"><label>نوع البناء</label><select id="bType"><option>بيت سكني</option><option>فيلا</option><option>مشتمل</option><option>شقة</option></select></div><div class="aq-field"><label>المساحة (م²)</label><input id="bArea" type="number" inputmode="numeric" placeholder="مثال: 200"></div><div class="aq-field"><label>مستوى التشطيب</label><select id="bFinish"><option value="450000">اقتصادي</option><option value="650000" selected>متوسط</option><option value="900000">جيد جداً</option><option value="1200000">فاخر</option></select></div><div class="aq-field"><label>ميزانيتك التقريبية (د.ع)</label><input id="bBudget" type="number" inputmode="numeric" placeholder="مثال: 150000000"></div></div><button class="aq-primary gold" id="bRun" style="margin-top:12px">احسب التكلفة</button><div id="bOut"></div></div><div class="aq-note">هذه حاسبة تقديرية وليست عرض سعر هندسي نهائي. التكلفة الفعلية تعتمد على الأرض والمواد والتصميم والتنفيذ.</div>`);
+    if(id==='handover')return shell(f,`<div class="aq-card"><h3>قائمة تسليم العقار</h3><div class="aq-field" style="margin-bottom:12px"><label>اختر العقار</label><select id="hProp">${ps.length?ps.map(p=>`<option value="${p.id}">${esc(p.t)} — ${esc(p.d)}</option>`).join(''):'<option>لا توجد عقارات حالياً</option>'}</select></div><div class="aq-list" id="hChecks">${['مطابقة اسم المالك والوثائق','فحص الكهرباء والماء والصرف','فحص الأبواب والنوافذ والأقفال','تسجيل قراءات العدادات','استلام المفاتيح والريموتات','تصوير حالة العقار عند الاستلام','تثبيت أي ملاحظات أو نواقص'].map((x,i)=>`<label class="aq-check"><input type="checkbox" data-h="${i}"> ${x}</label>`).join('')}</div><div class="aq-field full" style="margin-top:12px"><label>ملاحظات الاستلام</label><textarea id="hNotes" placeholder="اكتب أي ملاحظات أو نواقص..."></textarea></div><button class="aq-primary" id="hSave" style="margin-top:12px">حفظ قائمة التسليم</button><div id="hOut"></div></div>`);
+    if(id==='dark')return shell(f,`<div class="aq-card"><div class="aq-dark-preview"><b>عقاري</b><br>اختار المظهر اللي يناسبك وخليه محفوظ على جهازك.</div><button class="aq-primary gold" id="darkToggle" style="margin-top:12px">${document.body.classList.contains('aq-night')?'☀️ إيقاف الوضع الليلي':'🌙 تفعيل الوضع الليلي'}</button><div id="darkOut" class="aq-note" style="margin-top:12px">الوضع الليلي يبقى محفوظاً حتى بعد إغلاق الموقع.</div></div>`);
+    if(id==='exchange')return shell(f,`<div class="aq-card"><h3>تفاصيل العقار المطلوب للمبادلة</h3><div class="aq-grid"><div class="aq-field"><label>نوع العقار</label><select id="eType"><option>بيت</option><option>شقة</option><option>أرض</option><option>فيلا</option><option>مشتمل</option><option>محل</option><option>مخزن</option></select></div><div class="aq-field"><label>الموقع</label><input id="eLoc" placeholder="الحي / المنطقة"></div><div class="aq-field"><label>المساحة م²</label><input id="eArea" type="number"></div><div class="aq-field"><label>السعر التقريبي</label><input id="ePrice" type="number"></div><div class="aq-field"><label>غرف النوم</label><input id="eBeds" type="number"></div><div class="aq-field"><label>غرف المعيشة</label><input id="eLiving" type="number"></div><div class="aq-field"><label>الحمامات</label><input id="eBath" type="number"></div><div class="aq-field"><label>المطابخ</label><input id="eKitchen" type="number"></div><div class="aq-field"><label>عدد الطوابق</label><input id="eFloors" type="number"></div><div class="aq-field"><label>عدد الساحات / المناور</label><input id="eCourts" type="number"></div><div class="aq-field"><label>كراج</label><select id="eGarage"><option>غير متوفر في عقاري</option><option>متوفر</option></select></div><div class="aq-field"><label>حديقة</label><select id="eGarden"><option>غير متوفر في عقاري</option><option>متوفر</option></select></div><div class="aq-field"><label>سطح</label><select id="eRoof"><option>غير متوفر في عقاري</option><option>متوفر</option></select></div><div class="aq-field"><label>حالة العقار</label><select id="eCondition"><option>جديد</option><option>جيد</option><option>يحتاج صيانة</option></select></div><div class="aq-field full"><label>الإضافات والمواصفات</label><textarea id="eExtras" placeholder="مثال: مفروش، مولدة، تكييف، قريب من شارع رئيسي..."></textarea></div><div class="aq-field full"><label>ماذا تريد مقابل العقار؟</label><textarea id="eTerms" placeholder="اكتب نوع العقار أو الفرق المالي المقبول..."></textarea></div></div><button class="aq-primary gold" id="eSave" style="margin-top:12px">نشر طلب المبادلة</button><div id="eOut"></div></div><div class="aq-note">يمكنك كتابة «غير متوفر في عقاري» لأي ميزة لا تملكها، حتى تكون معلومات العرض واضحة للطرف الآخر.</div>`);
+    if(id==='investment')return shell(f,`<div class="aq-card"><h3>احسب جدوى الاستثمار</h3><div class="aq-grid"><div class="aq-field"><label>سعر الشراء</label><input id="iPrice" type="number" inputmode="numeric" placeholder="د.ع"></div><div class="aq-field"><label>الإيجار الشهري المتوقع</label><input id="iRent" type="number" inputmode="numeric" placeholder="د.ع"></div><div class="aq-field"><label>مصاريف سنوية تقريبية</label><input id="iExp" type="number" inputmode="numeric" placeholder="د.ع"></div><div class="aq-field"><label>المنطقة</label><input id="iLoc" placeholder="كركوك - المنطقة"></div></div><button class="aq-primary gold" id="iRun" style="margin-top:12px">احسب العائد</button><div id="iOut"></div></div><div class="aq-note">العائد السنوي = صافي دخل الإيجار السنوي ÷ سعر الشراء. النتيجة تقديرية ولا تشمل تغير قيمة العقار مستقبلاً.</div>`);
     if(id==='daily'){
-      let idx=0; try{const d=new Date().toISOString().slice(0,10);if(localStorage.getItem('aqDailyDate')!==d){idx=p.length?Math.floor(Math.random()*p.length):0;localStorage.setItem('aqDailyIndex',String(idx));localStorage.setItem('aqDailyDate',d)}else idx=Number(localStorage.getItem('aqDailyIndex')||0)}catch{}
-      const x=p[idx%Math.max(p.length,1)];
-      body+=x?`<p>فرصة مختارة تلقائياً لهذا اليوم من العقارات المتاحة.</p><div class="aqfCard"><b style="font-size:20px">${esc(x.t)}</b><small>📍 ${esc(x.city||'كركوك')} • ${esc(x.d||'')} • 📐 ${x.a||0} م² • 🛏️ ${x.r||0} غرف</small><div class="aqfPrice">${money(x.p)}</div></div>`:`<div class="aqfEmpty">لا توجد عقارات متاحة حالياً.</div>`;
+      const p=ps.length?ps[Math.floor((new Date().getDate()-1)%ps.length)]:null;
+      return shell(f,p?`<div class="aq-card"><div class="aq-property"><img src="${esc(p.img)}"><div><h4>${esc(p.t)}</h4><p>📍 ${esc(p.city)} — ${esc(p.d)}<br>📐 ${p.a} م² • 🛏 ${p.r||0} • 🚿 ${p.b||0}<br><strong style="color:#071d35">${money(p.p)}</strong></p></div></div></div><div class="aq-note"><b>ليش اخترناه اليوم؟</b><br>عقار مختار من البيانات الحالية ليكون فرصة يومية سريعة للمستخدم. راجع التفاصيل واتصل بالمالك قبل اتخاذ القرار.</div><button class="aq-primary gold" id="dailyOpen" style="margin-top:12px">فتح تفاصيل العقار</button>`:'<div class="aq-note">لا توجد عقارات حالياً لعرض عقار اليوم.</div>`);
     }
-
-    body+='</div>'; r.innerHTML=body; document.body.appendChild(r);
-
-    if(id==='purchase') r.querySelector('#pRun').onclick=()=>{const t=r.querySelector('#pType').value,b=Number(r.querySelector('#pBudget').value)||0;const out=p.filter(x=>(t==='all'||String(x.c||'')===t)&&(!b||Number(x.p)<=b));r.querySelector('#pOut').innerHTML=out.length?out.map(x=>`<div class="aqfCard"><b>${esc(x.t)}</b><small>📍 ${esc(x.city||'كركوك')} • ${esc(x.d||'')} • 📐 ${x.a||0} م²</small><span class="aqfPrice">${money(x.p)}</span></div>`).join(''):'<div class="aqfEmpty">لا توجد نتائج مطابقة. جرّب ميزانية أعلى أو نوعاً آخر.</div>'};
-    if(id==='build') r.querySelector('#bRun').onclick=()=>{const budget=Number(r.querySelector('#bBudget').value)||0,rate=Number(r.querySelector('#bRate').value)||0;const area=rate?Math.floor(budget/rate):0;r.querySelector('#bOut').innerHTML=area>0?`<div class="aqfOk">يمكنك بناء مساحة تقريبية قدرها <b>${area.toLocaleString('ar-IQ')} م²</b> ضمن ميزانية ${money(budget)} وبسعر متر ${money(rate)}.</div>`:'<div class="aqfEmpty">أدخل الميزانية وسعر المتر أولاً.</div>'};
-    if(id==='handover') r.querySelector('#hSave').onclick=()=>{const checks=[...r.querySelectorAll('[data-h]')].filter(x=>x.checked).length;try{localStorage.setItem('aqHandover',JSON.stringify({property:r.querySelector('#hProp')?.value||'',checks,note:r.querySelector('#hNote')?.value||'',date:new Date().toISOString()}))}catch{}r.querySelector('#hOut').innerHTML=`<div class="aqfOk">تم حفظ محضر التسليم على هذا الجهاز. البنود المكتملة: ${checks}/7.</div>`};
-    if(id==='exchange') r.querySelector('#eSave').onclick=()=>{const data={type:r.querySelector('#eType').value,location:r.querySelector('#eLoc').value,area:r.querySelector('#eArea').value,price:r.querySelector('#ePrice').value,beds:r.querySelector('#eBeds').value,living:r.querySelector('#eLiving').value,bath:r.querySelector('#eBath').value,kitchen:r.querySelector('#eKitchen').value,floors:r.querySelector('#eFloors').value,courts:r.querySelector('#eCourts').value,extras:r.querySelector('#eExtra').value,note:r.querySelector('#eNote').value,garage:r.querySelector('#eX0').checked,garden:r.querySelector('#eX1').checked,roof:r.querySelector('#eX2').checked,furnished:r.querySelector('#eX3').checked};try{localStorage.setItem('aqExchange',JSON.stringify(data))}catch{}r.querySelector('#eOut').innerHTML='<div class="aqfOk">تم حفظ طلب المبادلة على هذا الجهاز بنجاح.</div>'};
-    if(id==='investment') r.querySelector('#iRun').onclick=()=>{const buy=Number(r.querySelector('#iBuy').value)||0,rent=Number(r.querySelector('#iRent').value)||0,cost=Number(r.querySelector('#iCost').value)||0;const annual=Math.max(0,rent*12-cost),yieldPct=buy?(annual/buy)*100:0,payback=annual?buy/annual:0;r.querySelector('#iOut').innerHTML=buy&&rent?`<div class="aqfKpi"><div><small>العائد السنوي</small><strong>${money(annual)}</strong></div><div><small>نسبة العائد</small><strong>${yieldPct.toFixed(2)}%</strong></div></div><div class="aqfCard"><b>فترة الاسترداد التقريبية</b><small>${payback.toFixed(1)} سنة</small></div>`:'<div class="aqfEmpty">أدخل سعر الشراء والإيجار الشهري لحساب الجدوى.</div>'};
   }
 
-  // Capture-phase handler: يمنع أي modal قديم من اعتراض ضغطة مميزات عقاري، ثم يفتح الأداة مباشرة.
-  document.addEventListener('click', e => {
-    const target=e.target?.closest?.('[data-aq-feature]');
-    if(target){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();screen(target.getAttribute('data-aq-feature'));return;}
-    const closeBtn=e.target?.closest?.('[data-aq-close]'); if(closeBtn){e.preventDefault();e.stopPropagation();close();return;}
-    const back=e.target?.closest?.('[data-aq-back]'); if(back){e.preventDefault();e.stopPropagation();menu();return;}
-  }, true);
+  function bindLayer(){let l=document.getElementById('aqFeatureLayer');if(l)return l;l=document.createElement('div');l.id='aqFeatureLayer';l.innerHTML='<div id="aqFeatureWindow"></div>';document.body.appendChild(l);l.addEventListener('click',e=>{if(e.target===l)closeFeature()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFeature()});return l}
 
-  // Fallback for the React cards: recognise the visible feature title even if React did not add data attributes.
-  document.addEventListener('click', e => {
-    if(document.querySelector('.aqfMenu,.aqfScreen')) return;
-    let el=e.target?.closest?.('button,[role="button"],a,div');
-    if(!el) return;
-    const text=(el.innerText||el.textContent||'').trim();
-    const match=Object.entries(FEATURES).find(([id,f])=>id!=='dark' && text.includes(f[1]));
-    if(match){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();screen(match[0]);}
-  }, true);
+  function installBar(){
+    const app=document.querySelector('.app');if(!app)return;
+    let bar=document.getElementById('aqFeatureBar');
+    if(!bar){
+      bar=document.createElement('section');bar.id='aqFeatureBar';
+      bar.innerHTML=`<div class="aq-title"><div><h2>مميزات عقاري الذكية</h2><span>أدوات عملية داخل الموقع — اضغط على أي ميزة لفتح نافذة مستقلة</span></div></div><div id="aqFeatureGrid">${Object.entries(FEATURES).map(([id,f])=>`<button type="button" class="aq-feature-btn" data-aq-feature="${id}"><span class="ico">${f.icon}</span><strong>${f.title}</strong><small>${f.sub}</small></button>`).join('')}</div>`;
+      const nav=app.querySelector('nav');if(nav)app.insertBefore(bar,nav);else app.appendChild(bar);
+    }
+    bindLayer();
+  }
 
-  // Open the smart-features menu when the main app asks for it through the existing global hook.
-  window.AqariSmartFeatures={open:menu,openFeature:screen,toggleNight:()=>setNight(!night())};
-  window.dispatchEvent(new CustomEvent('aqari-features-ready'));
+  function applyNight(on){
+    document.body.classList.toggle('aq-night',on);
+    localStorage.setItem('aqNight',on?'1':'0');
+    let s=document.getElementById('aq-night-style');
+    if(!s){s=document.createElement('style');s.id='aq-night-style';document.head.appendChild(s)}
+    s.textContent=on?`.aq-night{background:#071d35!important;color:#e9f1f7!important}.aq-night .app{background:#071d35!important}.aq-night header,.aq-night .section h2,.aq-night .section a,.aq-night h1,.aq-night h2,.aq-night h3,.aq-night h4,.aq-night p,.aq-night small,.aq-night .muted{color:#e9f1f7!important}.aq-night article,.aq-night .quick button,.aq-night .cats button{background:#0b2944!important;color:#e9f1f7!important;border-color:#244762!important}.aq-night nav{background:#06192b!important;border-color:#244762!important}`:'';
+  }
+  applyNight(localStorage.getItem('aqNight')==='1');
 
-  // Also make a dedicated menu launcher available to any existing "مميزات عقاري الذكية" button.
-  document.addEventListener('click', e => {
-    if(document.querySelector('.aqfMenu,.aqfScreen')) return;
-    const el=e.target?.closest?.('button,[role="button"],a'); if(!el) return;
-    const text=(el.innerText||el.textContent||'').trim();
-    if(text.includes('مميزات عقاري الذكية')){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();menu();}
-  }, true);
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest?.('[data-aq-feature]');
+    if(!btn)return;
+    e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    openFeature(btn.getAttribute('data-aq-feature'));
+  },true);
+
+  document.addEventListener('click',e=>{
+    const id=e.target.id;
+    if(id==='pRun'){
+      const type=document.getElementById('pType').value,b=Number(document.getElementById('pBudget').value||0)*1000000,out=document.getElementById('pOut');
+      if(!b){out.innerHTML='<div class="aq-result">اكتب ميزانيتك أولاً.</div>';return}
+      const arr=getProps().filter(p=>(type==='الكل'||p.c===type)&&p.p<=b).sort((a,c)=>c.p-a.p).slice(0,5);
+      out.innerHTML=`<div class="aq-card" style="margin-top:12px"><h3>${arr.length?'العقارات المناسبة':'ما لقينا عقار ضمن هالميزانية حالياً'}</h3>${arr.map(p=>`<div class="aq-property" style="padding:8px 0;border-bottom:1px solid #edf1f5"><img src="${esc(p.img)}"><div><h4>${esc(p.t)}</h4><p>📍 ${esc(p.d)} • ${p.a} م²<br><b>${money(p.p)}</b></p></div></div>`).join('')}</div>`;
+    }
+    if(id==='bRun'){
+      const area=Number(document.getElementById('bArea').value||0),rate=Number(document.getElementById('bFinish').value||0),budget=Number(document.getElementById('bBudget').value||0),out=document.getElementById('bOut');
+      if(!area){out.innerHTML='<div class="aq-result">اكتب مساحة البناء أولاً.</div>';return}
+      const total=area*rate;out.innerHTML=`<div class="aq-result">التقدير التقريبي: <b>${money(total)}</b><br>المساحة: ${area} م² • سعر المتر المستخدم: ${money(rate)}${budget?`<br>ميزانيتك: ${money(budget)} — ${budget>=total?'ضمن التقدير ✅':'تحتاج ميزانية إضافية تقريباً '+money(total-budget)}`:''}</div>`;
+    }
+    if(id==='hSave'){
+      const n=[...document.querySelectorAll('[data-h]:checked')].length,out=document.getElementById('hOut');out.innerHTML=`<div class="aq-result">تم حفظ قائمة التسليم محلياً ✅<br>أنجزت ${n} من 7 بنود.${n===7?' كل البنود مكتملة.':''}</div>`;
+      localStorage.setItem('aqHandover',JSON.stringify({date:Date.now(),count:n,notes:document.getElementById('hNotes')?.value||''}));
+    }
+    if(id==='darkToggle'){
+      const on=!document.body.classList.contains('aq-night');applyNight(on);e.target.textContent=on?'☀️ إيقاف الوضع الليلي':'🌙 تفعيل الوضع الليلي';
+    }
+    if(id==='eSave'){
+      const req=['eLoc','eArea','ePrice'].map(x=>document.getElementById(x)?.value.trim());const out=document.getElementById('eOut');
+      if(req.some(x=>!x)){out.innerHTML='<div class="aq-result">كمل الموقع والمساحة والسعر حتى يكون عرض المبادلة واضحاً.</div>';return}
+      const data={type:document.getElementById('eType').value,location:req[0],area:req[1],price:req[2],beds:document.getElementById('eBeds').value,living:document.getElementById('eLiving').value,bath:document.getElementById('eBath').value,kitchen:document.getElementById('eKitchen').value,floors:document.getElementById('eFloors').value,courts:document.getElementById('eCourts').value,garage:document.getElementById('eGarage').value,garden:document.getElementById('eGarden').value,roof:document.getElementById('eRoof').value,condition:document.getElementById('eCondition').value,extras:document.getElementById('eExtras').value,terms:document.getElementById('eTerms').value};localStorage.setItem('aqExchange',JSON.stringify(data));out.innerHTML='<div class="aq-result">تم تجهيز طلب المبادلة وحفظه على جهازك ✅<br>سيظهر بهذه التفاصيل عند ربط النشر بقاعدة البيانات.</div>';
+    }
+    if(id==='iRun'){
+      const price=Number(document.getElementById('iPrice').value||0),rent=Number(document.getElementById('iRent').value||0),exp=Number(document.getElementById('iExp').value||0),out=document.getElementById('iOut');
+      if(!price||!rent){out.innerHTML='<div class="aq-result">اكتب سعر الشراء والإيجار الشهري.</div>';return}
+      const gross=rent*12,net=Math.max(0,gross-exp),yieldPct=net/price*100,years=net?price/net:0;out.innerHTML=`<div class="aq-result">الدخل السنوي: <b>${money(gross)}</b><br>صافي الدخل: <b>${money(net)}</b><br>العائد السنوي التقريبي: <b>${yieldPct.toFixed(2)}%</b><br>مدة استرداد رأس المال تقريباً: ${years.toFixed(1)} سنة</div>`;
+    }
+    if(id==='dailyOpen'){
+      const ps=getProps(),p=ps.length?ps[Math.floor((new Date().getDate()-1)%ps.length)]:null;if(p){closeFeature();setTimeout(()=>{const target=[...document.querySelectorAll('article')].find(a=>a.textContent.includes(p.t));target?.querySelector('.details')?.click()},220)}
+    }
+  },true);
+
+  function boot(){injectStyle();installBar();const observer=new MutationObserver(()=>{installBar()});observer.observe(document.body,{childList:true,subtree:true});setTimeout(()=>installBar(),300);setTimeout(()=>installBar(),1200)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
