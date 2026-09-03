@@ -1,4 +1,5 @@
 import './globals.css';
+import SmartFeatures from './SmartFeatures';
 
 export const metadata = {
   title: 'عقاري | عقارات كركوك',
@@ -6,5 +7,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="ar" dir="rtl"><body>{children}</body></html>;
+  return <html lang="ar" dir="rtl"><body><SmartFeatures />{children}</body></html>;
 }
