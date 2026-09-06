@@ -1,0 +1,11 @@
+/* تفاصيل العقار مرتبة كسطور واضحة، كل معلومة تحت الثانية */
+.detailInfo .features{display:flex;flex-direction:column;gap:10px}
+.detailInfo .features .feature{width:100%;padding:16px 18px}
+.detailInfo .features .feature strong{margin:0 0 4px}
+.detailInfo .detailRows{display:flex;flex-direction:column;gap:0}
+.detailInfo .detailRows>div{display:flex;justify-content:space-between;align-items:center;width:100%;padding:13px 0;border-bottom:1px solid #edf1f4}
+.detailInfo .detailRows>div:last-child{border-bottom:0}
+.detailInfo .detailRows span:last-child{text-align:left;font-weight:800}
+.dark .detailInfo .detailRows>div{border-color:#263e54}
+.dark .detailInfo .detailRows span:last-child{color:#f3f7fa}
+@media(max-width:620px){.detailInfo .features .feature{padding:14px}.detailInfo .detailRows>div{min-height:50px;padding:12px 0}}
