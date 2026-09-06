@@ -1,3 +1,3 @@
 'use client';
-import Complete from './complete/page';
-export default Complete;
+import Redesign from './complete/Redesign';
+export default Redesign;
