@@ -1,11 +1,47 @@
-/* تفاصيل العقار مرتبة كسطور واضحة، كل معلومة تحت الثانية */
-.detailInfo .features{display:flex;flex-direction:column;gap:10px}
-.detailInfo .features .feature{width:100%;padding:16px 18px}
-.detailInfo .features .feature strong{margin:0 0 4px}
-.detailInfo .detailRows{display:flex;flex-direction:column;gap:0}
-.detailInfo .detailRows>div{display:flex;justify-content:space-between;align-items:center;width:100%;padding:13px 0;border-bottom:1px solid #edf1f4}
-.detailInfo .detailRows>div:last-child{border-bottom:0}
-.detailInfo .detailRows span:last-child{text-align:left;font-weight:800}
-.dark .detailInfo .detailRows>div{border-color:#263e54}
-.dark .detailInfo .detailRows span:last-child{color:#f3f7fa}
-@media(max-width:620px){.detailInfo .features .feature{padding:14px}.detailInfo .detailRows>div{min-height:50px;padding:12px 0}}
+/* صفحة تفاصيل العقار — Single Column Stack */
+.propertyDetailPage{max-width:980px;margin-inline:auto}
+.propertyDetailPage .detailTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.propertyDetailPage .detailHero{display:flex;flex-direction:column;gap:18px}
+.propertyDetailPage .gallery{width:100%;display:flex;flex-direction:column;gap:10px}
+.propertyDetailPage .mainPhoto{width:100%;height:clamp(260px,52vw,560px);position:relative;overflow:hidden;border-radius:24px;background:#eef2f5}
+.propertyDetailPage .mainPhoto img{width:100%;height:100%;display:block;object-fit:cover}
+.propertyDetailPage .thumbs{display:flex;gap:10px;overflow-x:auto;padding:2px 1px 5px;scrollbar-width:none}
+.propertyDetailPage .thumbs::-webkit-scrollbar{display:none}
+.propertyDetailPage .thumb{flex:0 0 76px;width:76px;height:62px;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;background:#fff;cursor:pointer}
+.propertyDetailPage .thumb.selected{border-color:#c9a227}
+.propertyDetailPage .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.propertyDetailPage .detailInfo{display:flex;flex-direction:column;gap:14px;width:100%}
+.propertyDetailPage .detailInfo h1{margin:0;line-height:1.35}
+.propertyDetailPage .detailPrice{font-size:clamp(24px,4vw,36px);font-weight:900;color:#b58b12}
+.propertyDetailPage .detailInfo>p{margin:0;line-height:1.9}
+.propertyDetailPage .specGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%}
+.propertyDetailPage .specGrid>div{min-width:0;padding:16px;border:1px solid #e4eaf0;border-radius:16px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center}
+.propertyDetailPage .specGrid b{font-size:20px;font-weight:900}
+.propertyDetailPage .specGrid span{font-size:13px;color:#667789}
+.propertyDetailPage .detailActions{display:flex;flex-direction:column;gap:10px;width:100%}
+.propertyDetailPage .detailActions>a,.propertyDetailPage .detailActions>button{width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;border-radius:14px;box-sizing:border-box}
+.propertyDetailPage .detailSections{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.propertyDetailPage .detailPanel{width:100%;box-sizing:border-box}
+.propertyDetailPage .detailRows{display:flex;flex-direction:column;gap:0}
+.propertyDetailPage .detailRows>div{display:flex;justify-content:space-between;align-items:center;gap:18px;width:100%;padding:14px 0;border-bottom:1px solid #edf1f4}
+.propertyDetailPage .detailRows>div:last-child{border-bottom:0}
+.propertyDetailPage .detailRows span{color:#667789}
+.propertyDetailPage .detailRows b{text-align:left;font-weight:800}
+.propertyDetailPage .detailPanel .chips{display:flex;flex-wrap:wrap;gap:8px}
+.propertyDetailPage .mapBox,.propertyDetailPage .roiBox{width:100%;box-sizing:border-box}
+.propertyDetailPage .roiBox{display:flex;flex-direction:column;gap:14px}
+.dark .propertyDetailPage .specGrid>div{background:#071a2b;border-color:#263e54}
+.dark .propertyDetailPage .detailRows>div{border-color:#263e54}
+.dark .propertyDetailPage .detailRows span{color:#a9bac9}
+@media(max-width:700px){
+  .propertyDetailPage{padding-inline:12px}
+  .propertyDetailPage .detailTop{align-items:stretch}
+  .propertyDetailPage .detailTop>a,.propertyDetailPage .detailTop>button{flex:1;min-height:48px;display:flex;align-items:center;justify-content:center}
+  .propertyDetailPage .specGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .propertyDetailPage .mainPhoto{border-radius:18px}
+}
+@media(max-width:420px){
+  .propertyDetailPage .specGrid{gap:8px}
+  .propertyDetailPage .specGrid>div{padding:13px 8px}
+  .propertyDetailPage .thumb{flex-basis:68px;width:68px;height:56px}
+}
