@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './quick-access.css';
 
 export const metadata: Metadata = { title: 'عقاري | سوق العقارات العراقي', description: 'منصة عقارية عراقية حديثة للبحث والبيع والشراء والإيجار.' };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
