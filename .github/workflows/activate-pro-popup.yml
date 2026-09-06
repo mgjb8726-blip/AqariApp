@@ -1,0 +1,65 @@
+name: Activate Aqari Pro popup
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  activate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace quick access with popup button
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/page-client.tsx')
+          s=p.read_text()
+          s=s.replace("import Link from 'next/link';", "import Link from 'next/link';\nimport ProFeaturesButton from './pro-features-modal';")
+          old="<div className=\"sevenFeatures\">{sevenFeatures.map(([icon,title,href])=><Link href={href} className=\"sevenFeature\" key={title}><span className=\"sevenIcon\">{icon}</span><span>{title}</span><b>←</b></Link>)}</div>"
+          new="<div className=\"proFeatureArea\"><ProFeaturesButton /></div>"
+          if old not in s:
+              raise SystemExit('quick access markup not found')
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Add premium popup styles
+        run: |
+          cat >> app/quick-access.css <<'CSS'
+          .proFeatureArea{display:flex;justify-content:center;align-items:center;margin-top:20px}
+          .proTrigger{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:190px;padding:12px 20px;border:1px solid #b88b2f;border-radius:13px;background:linear-gradient(135deg,#c69a3b,#efd37b 52%,#c39434);color:#17212b;font-size:15px;font-weight:950;box-shadow:0 8px 20px rgba(176,132,42,.22),inset 0 1px rgba(255,255,255,.65);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}
+          .proTrigger:hover{transform:translateY(-2px);box-shadow:0 12px 25px rgba(176,132,42,.28),inset 0 1px rgba(255,255,255,.7)}
+          .proTrigger:active{transform:scale(.96);box-shadow:0 4px 10px rgba(176,132,42,.24)}
+          .proTrigger span{font-size:18px}
+          .proOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,15,26,.68);backdrop-filter:blur(7px);animation:proFade .18s ease}
+          .proModal{width:min(720px,100%);max-height:min(86vh,760px);overflow:auto;border:2px solid #d1a949;border-radius:25px;background:linear-gradient(145deg,#fffdf7,#fff7df 55%,#fffdf8);box-shadow:0 28px 80px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.9);padding:22px}
+          .proModalHead{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:2px 2px 18px;border-bottom:1px solid rgba(185,139,47,.28)}
+          .proKicker{font-size:12px;font-weight:900;color:#a77a24;letter-spacing:.5px}
+          .proModalHead h2{margin:3px 0 2px;color:#172331;font-size:25px;font-weight:950}
+          .proModalHead p{margin:0;color:#69737c;font-size:13px}
+          .proClose{width:40px;height:40px;flex:0 0 40px;border:1px solid #d8bd75;border-radius:12px;background:#fff;color:#26313b;font-size:27px;line-height:1;cursor:pointer;box-shadow:0 5px 14px rgba(8,30,50,.08)}
+          .proClose:hover{background:#fff8e8;border-color:#bd9139}
+          .proFeatureGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+          .proFeature{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;min-height:72px;padding:12px 14px;border:1px solid #dfd4b8;border-radius:16px;background:linear-gradient(135deg,#fff,#f8fbfc);color:#172331;text-decoration:none;box-shadow:0 8px 20px rgba(8,30,50,.07);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+          .proFeature:hover{transform:translateY(-2px);border-color:#c7a24f;box-shadow:0 13px 25px rgba(8,30,50,.11)}
+          .proFeature:active{transform:scale(.975)}
+          .proFeatureIcon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(145deg,#071322,#16334b);color:#e8c76f;font-size:20px;box-shadow:0 7px 15px rgba(6,17,31,.15)}
+          .proFeature>span:nth-child(2){font-size:14px;font-weight:900;line-height:1.4;text-align:right}
+          .proFeature b{font-size:24px;color:#b4882f;font-weight:700;transform:rotate(180deg)}
+          .dark .proTrigger{color:#18202a}
+          .dark .proModal{background:linear-gradient(145deg,#18211f,#1d2b26 58%,#17201d);border-color:#cba44f}
+          .dark .proModalHead h2,.dark .proFeature{color:#f4f7f8}
+          .dark .proModalHead p{color:#b9c2c6}
+          .dark .proFeature{background:linear-gradient(135deg,#0d1d2e,#102b39);border-color:#274052}
+          .dark .proClose{background:#102030;color:#f2f5f6;border-color:#3a5364}
+          @keyframes proFade{from{opacity:0}to{opacity:1}}
+          @media(max-width:620px){.proFeatureArea{margin-top:16px}.proTrigger{min-width:180px;padding:11px 17px}.proOverlay{padding:12px}.proModal{padding:17px;border-radius:21px;max-height:90vh}.proModalHead h2{font-size:21px}.proFeatureGrid{grid-template-columns:1fr;gap:10px}.proFeature{min-height:65px}.proFeatureIcon{width:40px;height:40px}}
+          CSS
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/activate-pro-popup.yml
+          git add app/page-client.tsx app/quick-access.css
+          git commit -m 'feat: make Aqari Pro a popup button' || exit 0
+          git push
