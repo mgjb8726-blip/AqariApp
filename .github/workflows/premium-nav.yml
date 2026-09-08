@@ -1,0 +1,39 @@
+name: Apply premium navigation design
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  recolor-navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update navigation design
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('App.tsx')
+          text = p.read_text(encoding='utf-8')
+          old = "nav:{position:'absolute',bottom:0,left:0,right:0,height:78,backgroundColor:C.white,borderTopWidth:1,borderTopColor:C.line,flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-around',paddingHorizontal:7},navText:{fontSize:10,color:C.muted,fontWeight:'700',textAlign:'center',lineHeight:17},active:{color:C.blue},addCircle:{width:52,height:52,borderRadius:26,backgroundColor:C.blue,alignItems:'center',justifyContent:'center',marginTop:-22,borderWidth:4,borderColor:C.white},add:{color:C.white,fontSize:31,lineHeight:39,textAlign:'center'},addLabel:{fontSize:9,color:C.muted,fontWeight:'700',textAlign:'center',marginTop:-2},"
+          new = "nav:{position:'absolute',bottom:10,left:12,right:12,height:72,backgroundColor:'#0B1F33',borderRadius:24,borderWidth:1,borderColor:'#173B57',flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-around',paddingHorizontal:8,shadowColor:'#000',shadowOpacity:.18,shadowRadius:14,shadowOffset:{width:0,height:7},elevation:10},navText:{fontSize:10,color:'#AAB8C6',fontWeight:'800',textAlign:'center',lineHeight:17,minWidth:52},active:{color:'#F4C95D'},addCircle:{width:54,height:54,borderRadius:18,backgroundColor:'#F4C95D',alignItems:'center',justifyContent:'center',marginTop:-25,borderWidth:4,borderColor:'#0B1F33',shadowColor:'#F4C95D',shadowOpacity:.28,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:8},add:{color:'#0B1F33',fontSize:31,lineHeight:39,textAlign:'center',fontWeight:'900'},addLabel:{fontSize:9,color:'#F4C95D',fontWeight:'900',textAlign:'center',marginTop:-2},"
+          if old not in text:
+              print('Navigation already updated or pattern not found')
+              raise SystemExit(0)
+          text = text.replace(old, new, 1)
+          text = text.replace("const C={blue:'#1769C2',blueDark:'#0E4F96',navy:'#15253A'", "const C={blue:'#0E9F9A',blueDark:'#0A7774',navy:'#0B1F33'")
+          text = text.replace("soft:'#EEF5FF'", "soft:'#E9F8F7'")
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Premium navy gold turquoise navigation"
+          git push
