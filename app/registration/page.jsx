@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from 'react';
 
+const SUPABASE_URL = 'https://kugoqyjxlbxykkjjxlia.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_blahC8UrqXE9g8vstmTNnQ_vJ7LNx5J';
+
 const provinces = {
   'بغداد': ['الكرخ','الرصافة','الأعظمية','الكاظمية','المنصور','العامرية','الدورة','السيدية','البياع','حي الجامعة','الغزالية','الشعلة','الشعب','مدينة الصدر','البلديات','زيونة','بغداد الجديدة','الزعفرانية','الكرادة','الجادرية','المدائن','أبو غريب','المحمودية'],
   'كركوك': ['مركز كركوك','رحيم آوه','المصلى','تسعين','واسطي','الواسطي الجديدة','الحي العسكري','الحي الصناعي','القادسية','المنطقة الخضراء','شوراو','العمل الشعبي','عرفة','الواسطية','الإسكان','الفيصلية','الماس','بنجة علي','ساحة الاحتفالات','حي النداء','حي النصر','حي الواسطي','الملتقى','دوميز','الزهراء','الحرية','التأميم','حي الربيع','حي اليرموك','حي العسكري','التون كوبري','الدبس','الحويجة','الزاب','الرياض','العباسي','الرشاد'],
@@ -37,6 +40,51 @@ const terms = [
 
 const emptyForm = { role: 'عامل', name: '', age: '', profession: '', province: '', area: '', phone: '', profile: '', idFront: '', idBack: '', residenceFront: '', residenceBack: '' };
 
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${SUPABASE_URL}${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!response.ok) throw new Error(data?.message || data?.error_description || data?.hint || `HTTP ${response.status}`);
+  return data;
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [meta, base64] = String(dataUrl).split(',');
+  const mime = meta.match(/data:([^;]+);base64/)?.[1] || 'application/octet-stream';
+  const binary = atob(base64 || '');
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+async function uploadDocument(requestId, type, dataUrl) {
+  const path = `${requestId}/${type}-${Date.now()}.jpg`;
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/contract-documents/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': dataUrl.match(/data:([^;]+);base64/)?.[1] || 'image/jpeg',
+      'x-upsert': 'false',
+    },
+    body: dataUrlToBlob(dataUrl),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`فشل رفع ${type}: ${text || response.status}`);
+  }
+  return path;
+}
+
 function UploadBox({ label, value, onChange, required = true }) {
   return (
     <label className="uploadBox">
@@ -59,9 +107,10 @@ export default function RegistrationPage() {
   const [form, setForm] = useState(emptyForm);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [requestCode, setRequestCode] = useState('');
 
   const areas = useMemo(() => form.province ? provinces[form.province] || [] : [], [form.province]);
-
   const update = (key, value) => setForm((old) => ({ ...old, [key]: value }));
 
   const validate = () => {
@@ -80,8 +129,61 @@ export default function RegistrationPage() {
     if (!e) setStep(2);
   };
 
+  const submitContract = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const id = crypto.randomUUID();
+      const code = `AAM-${Date.now().toString().slice(-8)}`;
+      await supabaseRequest('/rest/v1/aamil_contract_requests', {
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          id,
+          request_code: code,
+          full_name: form.name.trim(),
+          age: Number(form.age),
+          role: form.role,
+          profession: form.profession,
+          company_type: form.role === 'صاحب شركة' ? form.profession : null,
+          company_other: null,
+          company_offers: null,
+          province: form.province,
+          area: form.area,
+          phone: form.phone,
+          status: 'pending',
+        }),
+      });
+
+      const documents = [
+        ['profile', form.profile],
+        ['id-front', form.idFront],
+        ['id-back', form.idBack],
+        ['residence-front', form.residenceFront],
+        ['residence-back', form.residenceBack],
+      ];
+      for (const [type, dataUrl] of documents) {
+        const storagePath = await uploadDocument(id, type, dataUrl);
+        await supabaseRequest('/rest/v1/aamil_contract_documents', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ request_id: id, document_type: type, storage_path: storagePath }),
+        });
+      }
+
+      setRequestCode(code);
+      setStep(3);
+    } catch (err) {
+      console.error(err);
+      setError(`تعذر إرسال العقد إلى الإدارة. ${err?.message || 'حاول مرة أخرى.'}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const contractSvg = () => {
-    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
     const lines = terms.map((t, i) => `<text x="1040" y="${760 + i*105}" text-anchor="end" font-size="26" font-weight="700">${i+1}. ${esc(t[0])}</text><foreignObject x="100" y="${775 + i*105}" width="940" height="80"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial;direction:rtl;text-align:right;font-size:20px;line-height:1.6">${esc(t[1])}</div></foreignObject>`).join('');
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="${900 + terms.length*105}" viewBox="0 0 1200 ${900 + terms.length*105}"><rect width="100%" height="100%" fill="#f7f4ec"/><rect x="35" y="35" width="1130" height="${820 + terms.length*105}" rx="30" fill="#fff" stroke="#caa75d" stroke-width="4"/><text x="600" y="110" text-anchor="middle" font-size="42" font-weight="800">عقد تسجيل واعتماد</text><text x="600" y="155" text-anchor="middle" font-size="22">منصة عامل • نموذج بيانات واتفاق إلكتروني</text><text x="1040" y="220" text-anchor="end" font-size="25" font-weight="700">الاسم: ${esc(form.name)}</text><text x="1040" y="260" text-anchor="end" font-size="25">العمر: ${esc(form.age)} سنة • الصفة: ${esc(form.role)}</text><text x="1040" y="300" text-anchor="end" font-size="25">المهنة: ${esc(form.profession)}</text><text x="1040" y="340" text-anchor="end" font-size="25">المحافظة: ${esc(form.province)} • المنطقة: ${esc(form.area)}</text><text x="1040" y="380" text-anchor="end" font-size="25">الهاتف: ${esc(form.phone)}</text><line x1="100" y1="420" x2="1100" y2="420" stroke="#ddd"/><text x="1040" y="470" text-anchor="end" font-size="30" font-weight="800">الشروط والضمانات</text>${lines}<text x="600" y="${820 + terms.length*105}" text-anchor="middle" font-size="19">تمت الموافقة إلكترونياً • هذا النموذج للتوثيق والتنظيم ولا يغني عن أي متطلبات قانونية خاصة.</text></svg>`;
   };
@@ -102,7 +204,6 @@ export default function RegistrationPage() {
           <div className="brandMark">ع</div>
           <div><p className="eyebrow">عامل • نظام التوثيق</p><h1>تسجيل البيانات والعقد</h1><p>نموذج عصري ومرتب لتسجيل العمال وأصحاب العقارات والشركات والجهات المهنية.</p></div>
         </header>
-
         <div className="progress"><div className={step >= 1 ? 'active' : ''}><b>01</b><span>البيانات والوثائق</span></div><i/><div className={step >= 2 ? 'active' : ''}><b>02</b><span>الشروط</span></div><i/><div className={step >= 3 ? 'active' : ''}><b>03</b><span>العقد النهائي</span></div></div>
 
         {step === 1 && <form className="card" onSubmit={(e)=>{e.preventDefault();next();}}>
@@ -124,21 +225,22 @@ export default function RegistrationPage() {
           <div className="cardHead"><div><span className="mini">الخطوة الثانية</span><h2>الشروط والضمانات</h2></div><span className="contractTag">مسودة اتفاق</span></div>
           <div className="paper"><div className="paperTop"><span>عقد تسجيل واعتماد</span><small>منصة عامل</small></div>{terms.map((t,i)=><article className="term" key={t[0]}><div className="num">{i+1}</div><div><h3>{t[0]}</h3><p>{t[1]}</p></div></article>)}</div>
           <label className="check"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/><span>قرأت جميع الشروط والضمانات وأوافق عليها، وأقر بأن البيانات المدخلة صحيحة.</span></label>
-          <div className="actions"><button className="secondary" onClick={()=>setStep(1)}>رجوع</button><button className="primary" disabled={!accepted} onClick={()=>setStep(3)}>موافق وإظهار العقد <span>←</span></button></div>
+          {error && <div className="error">{error}</div>}
+          <div className="actions"><button className="secondary" onClick={()=>setStep(1)} disabled={submitting}>رجوع</button><button className="primary" disabled={!accepted || submitting} onClick={submitContract}>{submitting ? 'جاري إرسال العقد...' : 'موافق وإظهار العقد'} <span>←</span></button></div>
         </section>}
 
         {step === 3 && <section className="card finalCard" id="contract">
-          <div className="finalRibbon">✓ تم التوثيق</div>
+          <div className="finalRibbon">✓ تم التوثيق والإرسال للإدارة</div>
           <div className="contractPreview">
             <div className="contractHeader"><div className="seal">ع</div><div><span>منصة عامل</span><h2>عقد تسجيل واعتماد</h2><p>بيانات الطرف المسجل والشروط والضمانات</p></div></div>
             <div className="person"><img src={form.profile} alt="الصورة الشخصية"/><div className="details"><div><b>الاسم الثلاثي</b><span>{form.name}</span></div><div><b>العمر</b><span>{form.age} سنة</span></div><div><b>الصفة</b><span>{form.role}</span></div><div><b>المهنة</b><span>{form.profession}</span></div><div><b>المحافظة</b><span>{form.province}</span></div><div><b>المنطقة</b><span>{form.area}</span></div><div><b>رقم الهاتف</b><span>{form.phone}</span></div></div></div>
             <div className="docs"><div><b>البطاقة الموحدة</b><img src={form.idFront}/><img src={form.idBack}/></div><div><b>بطاقة السكن</b><img src={form.residenceFront}/><img src={form.residenceBack}/></div></div>
             <div className="termsMini"><h3>الشروط والضمانات</h3>{terms.map((t,i)=><p key={i}><b>{i+1}. {t[0]}:</b> {t[1]}</p>)}</div>
             <div className="approved"><span>✓</span> تمت الموافقة الإلكترونية على الشروط من صاحب البيانات.</div>
-            <div className="footerContract"><span>رقم نموذج: AAM-{Date.now().toString().slice(-8)}</span><span>{new Date().toLocaleDateString('ar-IQ')}</span></div>
+            <div className="footerContract"><span>رقم الطلب: {requestCode || 'AAM'}</span><span>{new Date().toLocaleDateString('ar-IQ')}</span></div>
           </div>
           <div className="actions noPrint"><button className="secondary" onClick={()=>setStep(2)}>الشروط</button><button className="secondary" onClick={printContract}>طباعة / حفظ PDF</button><button className="primary" onClick={downloadContract}>تحميل العقد كصورة</button></div>
-          <p className="note noPrint">ملاحظة: رفع المستندات هنا يعرضها داخل النموذج فقط. لربط الحفظ الدائم والتخزين الآمن للوثائق، يجب إضافة قاعدة بيانات وتخزين خاص مع صلاحيات وصول.</p>
+          <p className="note noPrint">تم حفظ بيانات الطلب والوثائق في نظام الإدارة، وحالة الطلب الآن: قيد المراجعة.</p>
         </section>}
       </section>
       <style jsx global>{`
