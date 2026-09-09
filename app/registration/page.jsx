@@ -10,13 +10,13 @@ const provinces = {
   'كركوك': ['مركز كركوك','رحيم آوه','المصلى','تسعين','واسطي','الواسطي الجديدة','الحي العسكري','الحي الصناعي','القادسية','المنطقة الخضراء','شوراو','العمل الشعبي','عرفة','الواسطية','الإسكان','الفيصلية','الماس','بنجة علي','ساحة الاحتفالات','حي النداء','حي النصر','حي الواسطي','الملتقى','دوميز','الزهراء','الحرية','التأميم','حي الربيع','حي اليرموك','حي العسكري','التون كوبري','الدبس','الحويجة','الزاب','الرياض','العباسي','الرشاد'],
   'نينوى': ['الموصل','الجانب الأيمن','الجانب الأيسر','الزهور','الدواسة','المنصور','الجامعة','المثنى','النور','الشرطة','الكرامة','الانتصار','القدس','عدن','التحرير','الحدباء','بعشيقة','الحمدانية','تلكيف','تلعفر','سنجار','الحضر','القيارة','حمام العليل','برطلة','زمار'],
   'البصرة': ['مركز البصرة','العشار','الجزائر','الطويسة','القبلة','الحسين','الزبير','أبو الخصيب','القرنة','شط العرب','الهارثة','الفاو','أم قصر','سفوان','المدينة'],
-  'الأنبار': ['الرمادي','الفلوجة','الحبانية','الخالدية','هيت','حديثة','القائم','عانة','راوة','الرطبة','عامرية الفلوجة','الكرمة','الرطبة'],
+  'الأنبار': ['الرمادي','الفلوجة','الحبانية','الخالدية','هيت','حديثة','القائم','عانة','راوة','الرطبة','عامرية الفلوجة','الكرمة'],
   'بابل': ['الحلة','المسيب','المحاويل','الهاشمية','القاسم','الطليعة','الإسكندرية','الكفل'],
   'كربلاء': ['مركز كربلاء','الحسينية','الحر','الجدول الغربي','الهندية','عين التمر'],
   'النجف': ['مركز النجف','الكوفة','المناذرة','المشخاب','الحيدرية','العباسية'],
   'القادسية': ['الديوانية','الشامية','عفك','الحمزة','الدغارة','السنية'],
   'ميسان': ['العمارة','علي الغربي','علي الشرقي','المجر الكبير','الكحلاء','قلعة صالح','الميمونة'],
-  'ذي قار': ['الناصرية','الشطرة','الرفاعي','سوق الشيوخ','الجبايش','الچبايش','الغراف','النصر'],
+  'ذي قار': ['الناصرية','الشطرة','الرفاعي','سوق الشيوخ','الجبايش','الغراف','النصر'],
   'واسط': ['الكوت','الحي','النعمانية','الصويرة','العزيزية','بدرة','الزبيدية'],
   'ديالى': ['بعقوبة','المقدادية','الخالص','خانقين','بلدروز','مندلي','جلولاء','قرة تبة'],
   'صلاح الدين': ['تكريت','سامراء','بيجي','الدور','بلد','طوز خورماتو','الشرقاط','الدجيل'],
@@ -27,6 +27,7 @@ const provinces = {
 };
 
 const professions = ['كهربائي','سباك','حداد','نجار','صباغ','بناء','عامل بناء','فني تكييف وتبريد','فني ألمنيوم','فني سيراميك وبلاط','عامل حدائق','تنظيف وصيانة','سائق','مقاول','مهندس','مكتب عقاري','صاحب عقار','صاحب شركة','موظف شركة','أخرى'];
+const roles = ['عامل / حرفي','صاحب عقار','صاحب شركة','جهة أخرى'];
 
 const terms = [
   ['الالتزام التام بالمواعيد','يلتزم مقدم الخدمة أو الطرف المعني بالحضور في الموعد المحدد بدقة دون أي تأخير غير مبرر. وفي حال وجود ظرف طارئ يمنع الالتزام، يجب إبلاغ الطرف الآخر والزبون قبل وقت كافٍ لتعديل الجدول.'],
@@ -38,17 +39,12 @@ const terms = [
   ['حل النزاعات وحفظ الحقوق','يُفضّل توثيق أي خلاف أو تغيير في الاتفاق كتابةً داخل التطبيق، ومحاولة حله ودياً قبل اتخاذ أي إجراء آخر، مع حفظ حق كل طرف في المطالبة بحقه وفق القوانين النافذة.'],
 ];
 
-const emptyForm = { role: 'عامل', name: '', age: '', profession: '', province: '', area: '', phone: '', profile: '', idFront: '', idBack: '', residenceFront: '', residenceBack: '' };
+const emptyForm = { role: 'عامل / حرفي', name: '', age: '', profession: '', companyType: '', province: '', area: '', phone: '', profile: '', idFront: '', idBack: '', residenceFront: '', residenceBack: '' };
 
 async function supabaseRequest(path, options = {}) {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...options,
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
   const text = await response.text();
   let data = null;
@@ -70,34 +66,20 @@ async function uploadDocument(requestId, type, dataUrl) {
   const path = `${requestId}/${type}-${Date.now()}.jpg`;
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/contract-documents/${path}`, {
     method: 'POST',
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': dataUrl.match(/data:([^;]+);base64/)?.[1] || 'image/jpeg',
-      'x-upsert': 'false',
-    },
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': dataUrl.match(/data:([^;]+);base64/)?.[1] || 'image/jpeg', 'x-upsert': 'false' },
     body: dataUrlToBlob(dataUrl),
   });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`فشل رفع ${type}: ${text || response.status}`);
-  }
+  if (!response.ok) throw new Error(`فشل رفع ${type}: ${await response.text() || response.status}`);
   return path;
 }
 
-function UploadBox({ label, value, onChange, required = true }) {
+function UploadBox({ label, value, onChange }) {
   return (
     <label className="uploadBox">
-      <div className="uploadIcon">⇧</div>
+      <div className="uploadIcon">＋</div>
       <div className="uploadText"><strong>{label}</strong><span>{value ? 'تم اختيار الصورة ✓' : 'اضغط لاختيار صورة واضحة'}</span></div>
-      <input type="file" accept="image/*" required={required && !value} onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => onChange(String(reader.result));
-        reader.readAsDataURL(file);
-      }} />
-      {value && <img className="thumb" src={value} alt="preview" />}
+      <input type="file" accept="image/*" required={!value} onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => onChange(String(reader.result)); reader.readAsDataURL(file); }} />
+      {value && <img className="thumb" src={value} alt="معاينة" />}
     </label>
   );
 }
@@ -109,144 +91,121 @@ export default function RegistrationPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [requestCode, setRequestCode] = useState('');
-
   const areas = useMemo(() => form.province ? provinces[form.province] || [] : [], [form.province]);
-  const update = (key, value) => setForm((old) => ({ ...old, [key]: value }));
+  const update = (key, value) => setForm(old => ({ ...old, [key]: value }));
+
+  const isWorker = form.role === 'عامل / حرفي';
+  const isCompany = form.role === 'صاحب شركة';
+  const professionValue = isCompany ? form.companyType : form.profession;
 
   const validate = () => {
     if (!form.name.trim()) return 'اكتب الاسم الثلاثي.';
     if (!form.age) return 'اختر العمر من 18 إلى 75 سنة.';
-    if (!form.profession) return 'اختر المهنة أو الصفة.';
     if (!form.province || !form.area) return 'اختر المحافظة والمنطقة.';
     if (!/^07\d{9}$/.test(form.phone)) return 'رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 11 رقماً.';
+    if (isWorker && !form.profession) return 'اختر المهنة / الاختصاص.';
+    if (isCompany && !form.companyType) return 'اختر نوع الشركة.';
     if (!form.profile || !form.idFront || !form.idBack || !form.residenceFront || !form.residenceBack) return 'يرجى رفع كل الصور المطلوبة بوضوح.';
     return '';
   };
 
-  const next = () => {
-    const e = validate();
-    setError(e);
-    if (!e) setStep(2);
-  };
+  const next = () => { const e = validate(); setError(e); if (!e) setStep(2); };
 
   const submitContract = async () => {
     if (submitting) return;
-    setSubmitting(true);
-    setError('');
+    setSubmitting(true); setError('');
     try {
       const id = crypto.randomUUID();
       const code = `AAM-${Date.now().toString().slice(-8)}`;
-      await supabaseRequest('/rest/v1/aamil_contract_requests', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          id,
-          request_code: code,
-          full_name: form.name.trim(),
-          age: Number(form.age),
-          role: form.role,
-          profession: form.profession,
-          company_type: form.role === 'صاحب شركة' ? form.profession : null,
-          company_other: null,
-          company_offers: null,
-          province: form.province,
-          area: form.area,
-          phone: form.phone,
-          status: 'pending',
-        }),
-      });
-
-      const documents = [
-        ['profile', form.profile],
-        ['id-front', form.idFront],
-        ['id-back', form.idBack],
-        ['residence-front', form.residenceFront],
-        ['residence-back', form.residenceBack],
-      ];
-      for (const [type, dataUrl] of documents) {
+      await supabaseRequest('/rest/v1/aamil_contract_requests', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
+        id, request_code: code, full_name: form.name.trim(), age: Number(form.age), role: form.role,
+        profession: isWorker ? form.profession : null, company_type: isCompany ? form.companyType : null,
+        company_other: null, company_offers: null, province: form.province, area: form.area, phone: form.phone, status: 'pending'
+      })});
+      for (const [type, dataUrl] of [['profile',form.profile],['id-front',form.idFront],['id-back',form.idBack],['residence-front',form.residenceFront],['residence-back',form.residenceBack]]) {
         const storagePath = await uploadDocument(id, type, dataUrl);
-        await supabaseRequest('/rest/v1/aamil_contract_documents', {
-          method: 'POST',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({ request_id: id, document_type: type, storage_path: storagePath }),
-        });
+        await supabaseRequest('/rest/v1/aamil_contract_documents', { method:'POST', headers:{Prefer:'return=minimal'}, body:JSON.stringify({request_id:id,document_type:type,storage_path:storagePath}) });
       }
-
-      setRequestCode(code);
-      setStep(3);
-    } catch (err) {
-      console.error(err);
-      setError(`تعذر إرسال العقد إلى الإدارة. ${err?.message || 'حاول مرة أخرى.'}`);
-    } finally {
-      setSubmitting(false);
-    }
+      setRequestCode(code); setStep(3);
+    } catch (err) { console.error(err); setError(`تعذر إرسال العقد إلى الإدارة. ${err?.message || 'حاول مرة أخرى.'}`); }
+    finally { setSubmitting(false); }
   };
 
   const contractSvg = () => {
-    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
-    const lines = terms.map((t, i) => `<text x="1040" y="${760 + i*105}" text-anchor="end" font-size="26" font-weight="700">${i+1}. ${esc(t[0])}</text><foreignObject x="100" y="${775 + i*105}" width="940" height="80"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial;direction:rtl;text-align:right;font-size:20px;line-height:1.6">${esc(t[1])}</div></foreignObject>`).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="${900 + terms.length*105}" viewBox="0 0 1200 ${900 + terms.length*105}"><rect width="100%" height="100%" fill="#f7f4ec"/><rect x="35" y="35" width="1130" height="${820 + terms.length*105}" rx="30" fill="#fff" stroke="#caa75d" stroke-width="4"/><text x="600" y="110" text-anchor="middle" font-size="42" font-weight="800">عقد تسجيل واعتماد</text><text x="600" y="155" text-anchor="middle" font-size="22">منصة عامل • نموذج بيانات واتفاق إلكتروني</text><text x="1040" y="220" text-anchor="end" font-size="25" font-weight="700">الاسم: ${esc(form.name)}</text><text x="1040" y="260" text-anchor="end" font-size="25">العمر: ${esc(form.age)} سنة • الصفة: ${esc(form.role)}</text><text x="1040" y="300" text-anchor="end" font-size="25">المهنة: ${esc(form.profession)}</text><text x="1040" y="340" text-anchor="end" font-size="25">المحافظة: ${esc(form.province)} • المنطقة: ${esc(form.area)}</text><text x="1040" y="380" text-anchor="end" font-size="25">الهاتف: ${esc(form.phone)}</text><line x1="100" y1="420" x2="1100" y2="420" stroke="#ddd"/><text x="1040" y="470" text-anchor="end" font-size="30" font-weight="800">الشروط والضمانات</text>${lines}<text x="600" y="${820 + terms.length*105}" text-anchor="middle" font-size="19">تمت الموافقة إلكترونياً • هذا النموذج للتوثيق والتنظيم ولا يغني عن أي متطلبات قانونية خاصة.</text></svg>`;
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
+    const lines = terms.map((t,i) => `<text x="1040" y="${760+i*105}" text-anchor="end" font-size="26" font-weight="700">${i+1}. ${esc(t[0])}</text><foreignObject x="100" y="${775+i*105}" width="940" height="80"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial;direction:rtl;text-align:right;font-size:20px;line-height:1.6">${esc(t[1])}</div></foreignObject>`).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="${900+terms.length*105}" viewBox="0 0 1200 ${900+terms.length*105}"><rect width="100%" height="100%" fill="#f7f4ec"/><rect x="35" y="35" width="1130" height="${820+terms.length*105}" rx="30" fill="#fff" stroke="#caa75d" stroke-width="4"/><text x="600" y="110" text-anchor="middle" font-size="42" font-weight="800">عقد تسجيل واعتماد</text><text x="600" y="155" text-anchor="middle" font-size="22">منصة عامل • نموذج بيانات واتفاق إلكتروني</text><text x="1040" y="220" text-anchor="end" font-size="25" font-weight="700">الاسم: ${esc(form.name)}</text><text x="1040" y="260" text-anchor="end" font-size="25">العمر: ${esc(form.age)} سنة • الصفة: ${esc(form.role)}</text><text x="1040" y="300" text-anchor="end" font-size="25">المهنة / الاختصاص: ${esc(professionValue)}</text><text x="1040" y="340" text-anchor="end" font-size="25">المحافظة: ${esc(form.province)} • المنطقة: ${esc(form.area)}</text><text x="1040" y="380" text-anchor="end" font-size="25">الهاتف: ${esc(form.phone)}</text><line x1="100" y1="420" x2="1100" y2="420" stroke="#ddd"/><text x="1040" y="470" text-anchor="end" font-size="30" font-weight="800">الشروط والضمانات</text>${lines}<text x="600" y="${820+terms.length*105}" text-anchor="middle" font-size="19">تمت الموافقة إلكترونياً • هذا النموذج للتوثيق والتنظيم.</text></svg>`;
   };
-
-  const downloadContract = () => {
-    const blob = new Blob([contractSvg()], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `عقد-${form.name || 'عامل'}.svg`; a.click(); URL.revokeObjectURL(url);
-  };
-
-  const printContract = () => window.print();
+  const downloadContract = () => { const blob = new Blob([contractSvg()], {type:'image/svg+xml;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`عقد-${form.name||'عامل'}.svg`; a.click(); URL.revokeObjectURL(url); };
 
   return (
-    <main className="page">
-      <div className="ambient one"/><div className="ambient two"/>
+    <main className="page" dir="rtl">
       <section className="shell">
         <header className="hero">
           <div className="brandMark">ع</div>
-          <div><p className="eyebrow">عامل • نظام التوثيق</p><h1>تسجيل البيانات والعقد</h1><p>نموذج عصري ومرتب لتسجيل العمال وأصحاب العقارات والشركات والجهات المهنية.</p></div>
+          <div><h1>عامل</h1><p>نظام العقود والتسجيل الرسمي</p></div>
         </header>
-        <div className="progress"><div className={step >= 1 ? 'active' : ''}><b>01</b><span>البيانات والوثائق</span></div><i/><div className={step >= 2 ? 'active' : ''}><b>02</b><span>الشروط</span></div><i/><div className={step >= 3 ? 'active' : ''}><b>03</b><span>العقد النهائي</span></div></div>
 
-        {step === 1 && <form className="card" onSubmit={(e)=>{e.preventDefault();next();}}>
-          <div className="cardHead"><div><span className="mini">الخطوة الأولى</span><h2>معلومات صاحب الطلب</h2></div><span className="secure">خصوصية • توثيق</span></div>
-          <div className="roleGrid">{['عامل','صاحب عقار','صاحب شركة','جهة أخرى'].map(r => <button type="button" key={r} className={form.role===r?'role activeRole':'role'} onClick={()=>update('role',r)}>{r}</button>)}</div>
-          <div className="grid two"><label>الاسم الثلاثي<input value={form.name} onChange={e=>update('name',e.target.value)} placeholder="مثال: محمد أحمد علي"/></label><label>العمر<select value={form.age} onChange={e=>update('age',e.target.value)}><option value="">اختر العمر</option>{Array.from({length:58},(_,i)=>18+i).map(a=><option key={a}>{a}</option>)}</select></label></div>
-          <UploadBox label="الصورة الشخصية" value={form.profile} onChange={v=>update('profile',v)} />
-          <div className="sectionTitle">البطاقة الوطنية الموحدة</div>
-          <div className="grid two"><UploadBox label="وجه البطاقة الموحدة" value={form.idFront} onChange={v=>update('idFront',v)} /><UploadBox label="خلف البطاقة الموحدة" value={form.idBack} onChange={v=>update('idBack',v)} /></div>
-          <div className="sectionTitle">بطاقة السكن</div>
-          <div className="grid two"><UploadBox label="وجه بطاقة السكن" value={form.residenceFront} onChange={v=>update('residenceFront',v)} /><UploadBox label="خلف بطاقة السكن" value={form.residenceBack} onChange={v=>update('residenceBack',v)} /></div>
-          <div className="grid two"><label>المهنة / الصفة<select value={form.profession} onChange={e=>update('profession',e.target.value)}><option value="">اختر المهنة</option>{professions.map(p=><option key={p}>{p}</option>)}</select></label><label>المحافظة<select value={form.province} onChange={e=>setForm(o=>({...o,province:e.target.value,area:''}))}><option value="">اختر المحافظة</option>{Object.keys(provinces).map(p=><option key={p}>{p}</option>)}</select></label></div>
-          <div className="grid two"><label>المنطقة<select value={form.area} disabled={!form.province} onChange={e=>update('area',e.target.value)}><option value="">{form.province?'اختر المنطقة':'اختر المحافظة أولاً'}</option>{areas.map(a=><option key={a}>{a}</option>)}</select></label><label>رقم الهاتف<input inputMode="numeric" maxLength={11} value={form.phone} onChange={e=>update('phone',e.target.value.replace(/\D/g,'').slice(0,11))} placeholder="07XXXXXXXXX"/><small>أرقام فقط • يبدأ بـ 07</small></label></div>
+        <div className="stepper" aria-label="مراحل التسجيل">
+          <div className="step active"><b>1</b><span>البيانات</span></div><i/><div className={`step ${step >= 2 ? 'active' : ''}`}><b>2</b><span>الشروط</span></div><i/><div className={`step ${step >= 3 ? 'active' : ''}`}><b>3</b><span>التأكيد</span></div>
+        </div>
+
+        {step === 1 && <form className="card" onSubmit={e=>{e.preventDefault();next();}}>
+          <div className="intro"><span>عقد بيانات وانضمام إلكتروني</span><h2>تسجيل بيانات المشترك</h2><p>أكمل جميع الحقول وارفع المستمسكات المطلوبة بوضوح.</p></div>
+          <div className="goldLine"/>
+
+          <section><div className="sectionHead"><b>01</b><h3>المعلومات الأساسية</h3></div>
+            <div className="grid two">
+              <label>الاسم الثلاثي<input value={form.name} onChange={e=>update('name',e.target.value)} placeholder="مثال: محمد أحمد علي" /></label>
+              <label>العمر<select value={form.age} onChange={e=>update('age',e.target.value)}><option value="">اختر العمر</option>{Array.from({length:58},(_,i)=>18+i).map(a=><option key={a}>{a}</option>)}</select></label>
+              <label>الصفة / نوع الحساب<select value={form.role} onChange={e=>{setForm(o=>({...o,role:e.target.value,profession:'',companyType:''}));}}>{roles.map(r=><option key={r}>{r}</option>)}</select></label>
+              {isWorker && <label>المهنة / الاختصاص<select value={form.profession} onChange={e=>update('profession',e.target.value)}><option value="">اختر المهنة</option>{professions.slice(0,13).map(p=><option key={p}>{p}</option>)}</select></label>}
+              {isCompany && <label>نوع الشركة<select value={form.companyType} onChange={e=>update('companyType',e.target.value)}><option value="">اختر نوع الشركة</option><option>شركة كهرباء (تجهيز مواد كهربائية)</option></select></label>}
+              <label>المحافظة<select value={form.province} onChange={e=>setForm(o=>({...o,province:e.target.value,area:''}))}><option value="">اختر المحافظة</option>{Object.keys(provinces).map(p=><option key={p}>{p}</option>)}</select></label>
+              <label>المنطقة<select value={form.area} disabled={!form.province} onChange={e=>update('area',e.target.value)}><option value="">{form.province?'اختر المنطقة':'اختر المحافظة أولاً'}</option>{areas.map(a=><option key={a}>{a}</option>)}</select></label>
+              <label>رقم الهاتف<input dir="ltr" inputMode="numeric" maxLength={11} value={form.phone} onChange={e=>update('phone',e.target.value.replace(/\D/g,'').slice(0,11))} placeholder="07XXXXXXXXX" /></label>
+            </div>
+          </section>
+
+          <section><div className="sectionHead"><b>02</b><h3>المستمسكات والصورة</h3></div>
+            <div className="uploads">
+              <UploadBox label="الصورة الشخصية" value={form.profile} onChange={v=>update('profile',v)} />
+              <UploadBox label="البطاقة الموحدة - الوجه" value={form.idFront} onChange={v=>update('idFront',v)} />
+              <UploadBox label="البطاقة الموحدة - الخلف" value={form.idBack} onChange={v=>update('idBack',v)} />
+              <UploadBox label="بطاقة السكن - الوجه" value={form.residenceFront} onChange={v=>update('residenceFront',v)} />
+              <UploadBox label="بطاقة السكن - الخلف" value={form.residenceBack} onChange={v=>update('residenceBack',v)} />
+            </div>
+          </section>
+
           {error && <div className="error">{error}</div>}
-          <button className="primary" type="submit">التالي <span>←</span></button>
+          <button className="nextButton" type="submit">التالي — مراجعة الشروط <span>←</span></button>
         </form>}
 
         {step === 2 && <section className="card termsCard">
-          <div className="cardHead"><div><span className="mini">الخطوة الثانية</span><h2>الشروط والضمانات</h2></div><span className="contractTag">مسودة اتفاق</span></div>
-          <div className="paper"><div className="paperTop"><span>عقد تسجيل واعتماد</span><small>منصة عامل</small></div>{terms.map((t,i)=><article className="term" key={t[0]}><div className="num">{i+1}</div><div><h3>{t[0]}</h3><p>{t[1]}</p></div></article>)}</div>
+          <div className="intro"><span>مراجعة العقد</span><h2>الشروط والضمانات</h2><p>راجع البنود التالية ثم وافق للانتقال إلى العقد النهائي.</p></div><div className="goldLine"/>
+          <div className="paper">{terms.map((t,i)=><article className="term" key={t[0]}><b>{i+1}</b><div><h3>{t[0]}</h3><p>{t[1]}</p></div></article>)}</div>
           <label className="check"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/><span>قرأت جميع الشروط والضمانات وأوافق عليها، وأقر بأن البيانات المدخلة صحيحة.</span></label>
           {error && <div className="error">{error}</div>}
-          <div className="actions"><button className="secondary" onClick={()=>setStep(1)} disabled={submitting}>رجوع</button><button className="primary" disabled={!accepted || submitting} onClick={submitContract}>{submitting ? 'جاري إرسال العقد...' : 'موافق وإظهار العقد'} <span>←</span></button></div>
+          <div className="actions"><button className="secondary" onClick={()=>setStep(1)}>رجوع</button><button className="nextButton" disabled={!accepted||submitting} onClick={submitContract}>{submitting?'جاري إرسال العقد...':'موافق وإظهار العقد'} <span>←</span></button></div>
         </section>}
 
         {step === 3 && <section className="card finalCard" id="contract">
-          <div className="finalRibbon">✓ تم التوثيق والإرسال للإدارة</div>
+          <div className="success">✓ تم إرسال البيانات والعقد إلى الإدارة</div>
           <div className="contractPreview">
-            <div className="contractHeader"><div className="seal">ع</div><div><span>منصة عامل</span><h2>عقد تسجيل واعتماد</h2><p>بيانات الطرف المسجل والشروط والضمانات</p></div></div>
-            <div className="person"><img src={form.profile} alt="الصورة الشخصية"/><div className="details"><div><b>الاسم الثلاثي</b><span>{form.name}</span></div><div><b>العمر</b><span>{form.age} سنة</span></div><div><b>الصفة</b><span>{form.role}</span></div><div><b>المهنة</b><span>{form.profession}</span></div><div><b>المحافظة</b><span>{form.province}</span></div><div><b>المنطقة</b><span>{form.area}</span></div><div><b>رقم الهاتف</b><span>{form.phone}</span></div></div></div>
-            <div className="docs"><div><b>البطاقة الموحدة</b><img src={form.idFront}/><img src={form.idBack}/></div><div><b>بطاقة السكن</b><img src={form.residenceFront}/><img src={form.residenceBack}/></div></div>
+            <div className="contractHeader"><div className="seal">ع</div><div><small>منصة عامل</small><h2>عقد تسجيل واعتماد</h2><p>بيانات المشترك والشروط والضمانات</p></div></div>
+            <div className="person"><img src={form.profile} alt="الصورة الشخصية"/><div className="details"><div><b>الاسم الثلاثي</b><span>{form.name}</span></div><div><b>العمر</b><span>{form.age} سنة</span></div><div><b>الصفة</b><span>{form.role}</span></div><div><b>المهنة / الاختصاص</b><span>{professionValue || '—'}</span></div><div><b>المحافظة</b><span>{form.province}</span></div><div><b>المنطقة</b><span>{form.area}</span></div><div><b>رقم الهاتف</b><span>{form.phone}</span></div></div></div>
+            <div className="docs"><div><b>البطاقة الموحدة</b><img src={form.idFront} alt="الوجه"/><img src={form.idBack} alt="الخلف"/></div><div><b>بطاقة السكن</b><img src={form.residenceFront} alt="الوجه"/><img src={form.residenceBack} alt="الخلف"/></div></div>
             <div className="termsMini"><h3>الشروط والضمانات</h3>{terms.map((t,i)=><p key={i}><b>{i+1}. {t[0]}:</b> {t[1]}</p>)}</div>
-            <div className="approved"><span>✓</span> تمت الموافقة الإلكترونية على الشروط من صاحب البيانات.</div>
+            <div className="approved">✓ تمت الموافقة الإلكترونية على الشروط من صاحب البيانات.</div>
             <div className="footerContract"><span>رقم الطلب: {requestCode || 'AAM'}</span><span>{new Date().toLocaleDateString('ar-IQ')}</span></div>
           </div>
-          <div className="actions noPrint"><button className="secondary" onClick={()=>setStep(2)}>الشروط</button><button className="secondary" onClick={printContract}>طباعة / حفظ PDF</button><button className="primary" onClick={downloadContract}>تحميل العقد كصورة</button></div>
-          <p className="note noPrint">تم حفظ بيانات الطلب والوثائق في نظام الإدارة، وحالة الطلب الآن: قيد المراجعة.</p>
+          <div className="actions noPrint"><button className="secondary" onClick={()=>setStep(2)}>الشروط</button><button className="secondary" onClick={()=>window.print()}>طباعة / حفظ PDF</button><button className="nextButton" onClick={downloadContract}>تحميل العقد كصورة</button></div>
+          <p className="note noPrint">حالة الطلب الآن: قيد المراجعة من الإدارة.</p>
         </section>}
       </section>
+
       <style jsx global>{`
-        *{box-sizing:border-box}body{margin:0;background:#f2f5f8;color:#122033;font-family:Arial,Tahoma,sans-serif}button,input,select{font:inherit}.page{direction:rtl;min-height:100vh;padding:40px 18px;position:relative;overflow:hidden}.ambient{position:absolute;border-radius:50%;filter:blur(2px);opacity:.45;pointer-events:none}.ambient.one{width:420px;height:420px;background:#dcebf0;top:-180px;right:-120px}.ambient.two{width:340px;height:340px;background:#efe3c5;bottom:-140px;left:-100px}.shell{width:min(1050px,100%);margin:auto;position:relative}.hero{display:flex;gap:18px;align-items:center;margin-bottom:24px}.brandMark{width:62px;height:62px;border-radius:20px;background:#071b31;color:#d8b56b;display:grid;place-items:center;font-size:35px;font-weight:900;box-shadow:0 16px 35px #071b3126}.eyebrow,.mini{color:#9b7b39;font-weight:800;font-size:13px;margin:0 0 5px}.hero h1{margin:0;font-size:31px}.hero p:last-child{margin:7px 0 0;color:#667386}.progress{display:grid;grid-template-columns:1fr 90px 1fr 90px 1fr;align-items:center;margin-bottom:18px}.progress>div{display:flex;align-items:center;gap:9px;color:#8793a3;font-size:13px;font-weight:700}.progress b{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:#e6ebf0}.progress .active{color:#13243a}.progress .active b{background:#d9b96f;color:#071b31}.progress i{height:2px;background:#dfe5eb}.card{background:#fff;border:1px solid #e4e9ee;border-radius:26px;padding:28px;box-shadow:0 18px 50px #13243a0c}.cardHead{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}.cardHead h2{margin:0;font-size:25px}.secure,.contractTag{background:#f4f7f8;border:1px solid #e1e7ea;border-radius:999px;padding:8px 12px;font-size:12px;color:#647180}.roleGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}.role{border:1px solid #dce3e8;background:#f8fafb;border-radius:14px;padding:13px;cursor:pointer;color:#455466}.activeRole{border-color:#d0ac5e;background:#fff8e9;color:#725719;font-weight:800}.grid{display:grid;gap:14px}.grid.two{grid-template-columns:repeat(2,1fr)}label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:14px;color:#344457}input,select{border:1px solid #d9e0e7;border-radius:13px;padding:13px 14px;background:#fff;outline:none;color:#1a2a3b}input:focus,select:focus{border-color:#b79552;box-shadow:0 0 0 3px #d5b66a20}small{font-size:11px;color:#8995a2;font-weight:500}.uploadBox{position:relative;min-height:92px;border:1.5px dashed #cbd5df;border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;background:#fbfcfd;cursor:pointer;margin:12px 0}.uploadBox input{position:absolute;inset:0;opacity:0;cursor:pointer}.uploadIcon{width:44px;height:44px;border-radius:13px;background:#071b31;color:#e0be70;display:grid;place-items:center;font-size:22px}.uploadText{display:flex;flex-direction:column;gap:4px}.uploadText span{font-size:12px;color:#84909d;font-weight:500}.thumb{width:64px;height:64px;object-fit:cover;border-radius:11px;margin-right:auto;border:1px solid #ddd}.sectionTitle{font-size:16px;font-weight:900;border-right:4px solid #d1ae61;padding-right:9px;margin:22px 0 5px}.grid.two>.uploadBox{margin:0}.primary,.secondary{border:0;border-radius:14px;padding:14px 20px;cursor:pointer;font-weight:800}.primary{background:#071b31;color:#fff;box-shadow:0 10px 25px #071b3120}.primary:hover{transform:translateY(-1px)}.primary:disabled{opacity:.4;cursor:not-allowed}.secondary{background:#eef2f5;color:#344457}.primary span{margin-right:10px}.card>.primary{display:block;margin:24px auto 0;min-width:210px}.error{margin-top:14px;background:#fff1f1;color:#a43c3c;border:1px solid #f0caca;padding:12px 14px;border-radius:12px;font-size:13px}.paper{background:#faf8f1;border:1px solid #e6dcc5;border-radius:18px;padding:22px;max-height:580px;overflow:auto}.paperTop{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dfd5bd;padding-bottom:15px;margin-bottom:12px;color:#725719;font-weight:900}.paperTop small{color:#a1844d}.term{display:flex;gap:12px;padding:16px 0;border-bottom:1px dashed #ddd1b7}.term:last-child{border:0}.num{flex:0 0 34px;height:34px;border-radius:10px;background:#e8d19b;color:#604816;display:grid;place-items:center;font-weight:900}.term h3{margin:0 0 5px;font-size:15px}.term p{margin:0;line-height:1.8;color:#5f6976;font-size:13px}.check{flex-direction:row;align-items:center;margin-top:18px;background:#f6f9fa;border:1px solid #e1e7eb;padding:13px;border-radius:13px}.check input{accent-color:#071b31;width:18px;height:18px}.check span{font-size:13px}.actions{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}.finalCard{position:relative}.finalRibbon{display:inline-block;background:#e9f7ef;color:#237346;border:1px solid #c8ead5;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;margin-bottom:14px}.contractPreview{background:#fffdf8;border:2px solid #d7b66e;border-radius:18px;padding:24px;box-shadow:inset 0 0 0 8px #fff8e8}.contractHeader{display:flex;gap:14px;align-items:center;border-bottom:2px solid #eee3ca;padding-bottom:18px}.seal{width:58px;height:58px;border-radius:18px;background:#071b31;color:#d9b66b;display:grid;place-items:center;font-size:30px;font-weight:900}.contractHeader span{font-size:12px;color:#987a3e;font-weight:800}.contractHeader h2{margin:2px 0;font-size:25px}.contractHeader p{margin:0;color:#7a8490;font-size:12px}.person{display:flex;gap:18px;padding:20px 0;border-bottom:1px solid #ece7dc}.person>img{width:120px;height:140px;border-radius:14px;object-fit:cover;border:1px solid #d9cfba}.details{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;flex:1}.details div{background:#faf8f1;padding:10px;border-radius:10px}.details b,.details span{display:block}.details b{font-size:10px;color:#9a7c42;margin-bottom:4px}.details span{font-size:13px;font-weight:800}.docs{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:20px 0}.docs>div{background:#faf8f1;border-radius:13px;padding:12px}.docs b{display:block;margin-bottom:9px;color:#715a2e}.docs img{width:calc(50% - 5px);height:105px;object-fit:cover;border-radius:9px;border:1px solid #d9cfba}.docs img+img{margin-right:10px}.termsMini{border-top:1px solid #ece7dc;padding-top:16px}.termsMini h3{font-size:17px;margin:0 0 10px}.termsMini p{font-size:11px;line-height:1.75;color:#5d6671;margin:7px 0}.approved{margin-top:15px;background:#edf8f1;color:#256b42;border:1px solid #cde8d6;border-radius:11px;padding:11px;font-size:12px;font-weight:800}.approved span{margin-left:7px}.footerContract{display:flex;justify-content:space-between;color:#8b8d8b;font-size:10px;margin-top:14px}.note{font-size:11px;color:#87919d;text-align:center;line-height:1.7;margin:15px auto 0;max-width:750px}
-        @media(max-width:700px){.page{padding:22px 10px}.hero h1{font-size:24px}.hero p:last-child{font-size:12px}.roleGrid{grid-template-columns:repeat(2,1fr)}.grid.two{grid-template-columns:1fr}.progress{grid-template-columns:1fr 20px 1fr 20px 1fr}.progress>div span{display:none}.progress>div{justify-content:center}.card{padding:18px;border-radius:20px}.cardHead{align-items:flex-start}.secure{display:none}.person{align-items:flex-start}.person>img{width:88px;height:110px}.details{grid-template-columns:1fr}.docs{grid-template-columns:1fr}.contractPreview{padding:14px;box-shadow:inset 0 0 0 4px #fff8e8}.actions .primary,.actions .secondary{flex:1}.paper{max-height:500px}}
-        @media print{body{background:#fff}.page{padding:0}.ambient,.hero,.progress,.noPrint{display:none!important}.shell{width:100%}.card{box-shadow:none;border:0;padding:0}.contractPreview{border:0;box-shadow:none}.finalCard{padding:0}.finalRibbon{display:none}}
+        *{box-sizing:border-box}html,body{margin:0;padding:0}body{background:#f9fafb;color:#0f172a;font-family:Arial,Tahoma,sans-serif}.page{min-height:100vh;padding:0 16px 48px}.shell{width:min(980px,100%);margin:0 auto}.hero{background:#0f172a;color:#fff;margin:0 -16px 28px;padding:22px max(16px,calc((100vw - 948px)/2));border-radius:0 0 28px 28px;display:flex;align-items:center;gap:14px}.brandMark{width:54px;height:54px;border-radius:10px;background:#ca8a04;color:#000;display:grid;place-items:center;font-size:30px;font-weight:900}.hero h1{margin:0;font-size:27px}.hero p{margin:4px 0 0;color:#cbd5e1;font-size:13px}.stepper{display:grid;grid-template-columns:1fr 70px 1fr 70px 1fr;align-items:center;margin:0 auto 22px;max-width:650px}.step{display:flex;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:12px;font-weight:800}.step b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #cbd5e1}.step.active{color:#0f172a}.step.active b{background:#ca8a04;border-color:#ca8a04;color:#000}.stepper i{height:2px;background:#dbe1e7}.card{background:#fdfbf7;border:1px solid #e5e7eb;border-radius:30px;padding:30px;box-shadow:0 18px 55px rgba(15,23,42,.08)}.intro span{color:#ca8a04;font-size:13px;font-weight:900}.intro h2{margin:6px 0 5px;font-size:28px}.intro p{margin:0;color:#64748b;font-size:13px}.goldLine{height:2px;background:#ca8a04;width:100%;margin:18px 0 26px;opacity:.8}.sectionHead{display:flex;align-items:center;gap:10px;margin:0 0 15px}.sectionHead b{color:#ca8a04;font-size:13px}.sectionHead h3{margin:0;font-size:18px}.grid{display:grid;gap:15px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:800;color:#334155}input,select{width:100%;border:1px solid #d7dde5;border-radius:13px;background:#fff;padding:13px 14px;color:#0f172a;outline:none}input:focus,select:focus{border-color:#ca8a04;box-shadow:0 0 0 3px rgba(202,138,4,.12)}select:disabled{background:#f1f5f9;color:#94a3b8}section+section{margin-top:28px}.uploads{display:grid;grid-template-columns:1fr 1fr;gap:12px}.uploadBox{position:relative;min-height:90px;border:1.5px dashed #cbd5e1;border-radius:16px;background:#fff;padding:13px;display:flex;align-items:center;gap:12px;cursor:pointer}.uploadBox input{position:absolute;inset:0;opacity:0;cursor:pointer}.uploadIcon{flex:0 0 44px;width:44px;height:44px;border-radius:10px;background:#0f172a;color:#ca8a04;display:grid;place-items:center;font-size:24px}.uploadText{display:flex;flex-direction:column;gap:4px;min-width:0}.uploadText strong{font-size:13px}.uploadText span{font-size:11px;color:#94a3b8;font-weight:600}.thumb{margin-right:auto;width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid #e2e8f0}.error{margin-top:15px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:12px;padding:12px;font-size:12px}.nextButton,.secondary{border:0;border-radius:14px;padding:14px 20px;font-weight:900;cursor:pointer}.nextButton{background:#ca8a04;color:#0f172a;box-shadow:0 9px 20px rgba(202,138,4,.22)}.nextButton:hover{filter:brightness(1.05);transform:translateY(-1px)}.nextButton:disabled{opacity:.45;cursor:not-allowed;transform:none}.card>.nextButton{width:100%;margin-top:24px}.nextButton span{margin-right:8px}.secondary{background:#e2e8f0;color:#334155}.paper{background:#fff;border:1px solid #eadfc7;border-radius:18px;padding:20px;max-height:560px;overflow:auto}.term{display:flex;gap:12px;padding:15px 0;border-bottom:1px dashed #e5dcc8}.term:last-child{border-bottom:0}.term>b{flex:0 0 32px;width:32px;height:32px;border-radius:9px;background:#f4e7c4;color:#7c5a12;display:grid;place-items:center}.term h3{margin:0 0 5px;font-size:14px}.term p{margin:0;color:#64748b;font-size:12px;line-height:1.8}.check{flex-direction:row;align-items:center;margin-top:16px;padding:13px;background:#fff;border:1px solid #e2e8f0;border-radius:13px}.check input{width:18px;height:18px;accent-color:#ca8a04}.check span{font-size:12px}.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}.success{display:inline-block;background:#ecfdf3;color:#166534;border:1px solid #bbf7d0;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:900;margin-bottom:15px}.contractPreview{background:#fffdf8;border:2px solid #d8b86b;border-radius:18px;padding:22px;box-shadow:inset 0 0 0 6px #fff8e8}.contractHeader{display:flex;gap:13px;align-items:center;border-bottom:1px solid #eadfc7;padding-bottom:15px}.seal{width:52px;height:52px;border-radius:13px;background:#0f172a;color:#ca8a04;display:grid;place-items:center;font-size:28px;font-weight:900}.contractHeader small{color:#a67a22;font-weight:900}.contractHeader h2{margin:3px 0;font-size:23px}.contractHeader p{margin:0;color:#64748b;font-size:11px}.person{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid #eee7d8}.person>img{width:110px;height:130px;object-fit:cover;border-radius:12px;border:1px solid #ddd2ba}.details{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.details div{background:#faf8f1;padding:9px;border-radius:9px}.details b{display:block;color:#a67a22;font-size:9px;margin-bottom:3px}.details span{font-size:12px;font-weight:800}.docs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 0}.docs>div{background:#faf8f1;border-radius:12px;padding:10px}.docs b{display:block;color:#7c5a12;font-size:11px;margin-bottom:8px}.docs img{width:calc(50% - 5px);height:100px;object-fit:cover;border-radius:8px}.docs img+img{margin-right:10px}.termsMini{border-top:1px solid #eee7d8;padding-top:15px}.termsMini h3{margin:0 0 9px;font-size:15px}.termsMini p{font-size:10px;line-height:1.7;color:#64748b;margin:6px 0}.approved{margin-top:14px;padding:10px;border-radius:10px;background:#ecfdf3;color:#166534;font-size:11px;font-weight:800}.footerContract{display:flex;justify-content:space-between;margin-top:12px;color:#94a3b8;font-size:9px}.note{text-align:center;color:#94a3b8;font-size:11px}.noPrint{}@media(max-width:700px){.page{padding:0 10px 35px}.hero{margin:0 -10px 20px;padding:18px 14px;border-radius:0 0 22px 22px}.hero h1{font-size:23px}.hero p{font-size:11px}.stepper{grid-template-columns:1fr 30px 1fr 30px 1fr}.step span{display:none}.card{padding:18px;border-radius:22px}.intro h2{font-size:23px}.grid.two,.uploads{grid-template-columns:1fr}.uploadBox{min-height:84px}.details{grid-template-columns:1fr}.person{align-items:flex-start}.person>img{width:82px;height:105px}.docs{grid-template-columns:1fr}.actions .nextButton,.actions .secondary{flex:1}.paper{max-height:500px}}@media print{body{background:#fff}.hero,.stepper,.noPrint{display:none!important}.page{padding:0}.shell{width:100%}.card{box-shadow:none;border:0;padding:0}.contractPreview{border:0;box-shadow:none}}
       `}</style>
     </main>
   );
