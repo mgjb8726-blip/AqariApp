@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>محاكي المجمع | عامل</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b9d5e8;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#hud{position:fixed;z-index:10;inset:0;pointer-events:none}.panel{pointer-events:auto;background:rgba(8,22,35,.86);backdrop-filter:blur(16px);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 10px 35px #0003}.top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.brand{padding:11px 15px;font-weight:900}.brand b{color:#f2c94c}.actions{display:flex;gap:8px}.btn{border:0;border-radius:13px;padding:11px 13px;background:#fff;color:#102333;font-weight:800}.btn.gold{background:#f2c94c}.side{position:absolute;right:14px;top:80px;width:220px;padding:12px;max-height:65vh;overflow:auto}.side h3{margin:2px 0 9px;font-size:15px}.house{display:flex;align-items:center;justify-content:space-between;width:100%;margin:6px 0;padding:10px;border:1px solid #ffffff18;border-radius:12px;background:#ffffff0b;color:#fff;text-align:right}.house.active{background:#f2c94c;color:#102333}.info{position:absolute;left:14px;bottom:14px;width:min(310px,calc(100% - 28px));padding:14px;display:none}.info.show{display:block}.info h2{margin:0 0 5px;font-size:18px}.info p{margin:4px 0;color:#cbd6df;font-size:12px}.controls{position:absolute;left:14px;bottom:14px;width:130px;height:130px;pointer-events:auto}.stick{position:absolute;inset:20px;border-radius:50%;background:#102333aa;border:1px solid #fff2}.key{position:absolute;width:38px;height:38px;border-radius:11px;background:#fff;color:#102333;display:grid;place-items:center;font-weight:900;user-select:none}.up{left:46px;top:0}.down{left:46px;bottom:0}.left{left:0;top:46px}.right{right:0;top:46px}.hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:8px 12px;border-radius:12px;background:#102333aa;color:#fff;font-size:11px}
+@media(max-width:700px){.side{width:180px;right:10px;top:72px}.top{left:10px;right:10px}.side{max-height:48vh}.controls{transform:scale(.82);transform-origin:bottom left}}
+</style>
+</head>
+<body>
+<div id="hud">
+ <div class="top"><div class="panel brand">محاكي المجمع <b>3D</b></div><div class="actions"><button class="btn" id="topView">الخريطة</button><button class="btn gold" id="enterBtn">دخول البيت</button></div></div>
+ <div class="panel side"><h3>🏠 اختر بيتاً</h3><div id="houses"></div></div>
+ <div id="info" class="panel info"><h2 id="infoTitle"></h2><p id="infoText"></p><button class="btn gold" id="goBtn">اذهب إلى البيت</button></div>
+ <div class="controls"><div class="stick"></div><div class="key up" data-k="w">▲</div><div class="key down" data-k="s">▼</div><div class="key left" data-k="a">◀</div><div class="key right" data-k="d">▶</div></div>
+ <div class="hint">اسحب الشاشة للدوران • استخدم الأزرار للحركة</div>
+</div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.161.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.161.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xb9d5e8);scene.fog=new THREE.Fog(0xb9d5e8,120,320);
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,600);camera.position.set(0,42,62);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,0,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.47;controls.minDistance=12;controls.maxDistance=190;
+scene.add(new THREE.HemisphereLight(0xffffff,0x6f7d68,2.1));const sun=new THREE.DirectionalLight(0xfff1d0,3.2);sun.position.set(-80,120,60);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);scene.add(sun);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(320,320),new THREE.MeshStandardMaterial({color:0x6d8d61,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+function box(w,h,d,c){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:c,roughness:.78}));m.castShadow=m.receiveShadow=true;return m}
+function road(x,z,w,d){const r=box(w,.06,d,0x34383b);r.position.set(x,.04,z);scene.add(r);for(let i=-w/2+5;i<w/2;i+=10){const mark=box(.25,.07,3,0xf0d36a);mark.position.set(x+i,.09,z);scene.add(mark)}}
+road(0,0,28,270);road(-78,0,25,270);road(78,0,25,270);road(0,-105,185,24);road(0,0,185,24);road(0,105,185,24);
+const houses=[];let id=1;
+function house(x,z,w=18,d=16,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;const body=box(w,7,d,0xe8e1d5);body.position.y=3.5;g.add(body);const roof=box(w+2,1.2,d+2,0x8b5b45);roof.position.y=7.6;g.add(roof);const door=box(2.8,4,.25,0x4b3025);door.position.set(0,2.1,d/2+.15);g.add(door);for(const xx of [-w*.28,w*.28]){const win=box(3,2.3,.2,0x83b7ca);win.position.set(xx,4,d/2+.16);g.add(win)}const yard=box(w+5,.15,d+5,0x79a66c);yard.position.y=.08;g.add(yard);const gate=box(3,2.2,.3,0x555b5c);gate.position.set(0,1.1,-d/2-2.5);g.add(gate);scene.add(g);g.userData={id:'بيت '+id,title:'بيت '+id,position:g.position.clone(),group:g};houses.push(g);id++;return g}
+const coords=[[-48,-82],[-22,-82],[22,-82],[48,-82],[-48,-48],[-22,-48],[22,-48],[48,-48],[-48,48],[-22,48],[22,48],[48,48],[-48,82],[-22,82],[22,82],[48,82]];
+coords.forEach((p,i)=>house(p[0],p[1],17,15,(i%2?0:.02)));
+function tree(x,z){const g=new THREE.Group();g.position.set(x,0,z);const trunk=box(1,4,1,0x765039);trunk.position.y=2;g.add(trunk);const crown=new THREE.Mesh(new THREE.SphereGeometry(3.5,10,8),new THREE.MeshStandardMaterial({color:0x47794b,roughness:1}));crown.position.y=6;g.add(crown);scene.add(g)}
+for(let x=-90;x<=90;x+=18){tree(x,-118);tree(x,118)}for(let z=-100;z<=100;z+=18){tree(-92,z);tree(92,z)}
+function lamp(x,z){const p=new THREE.Group();p.position.set(x,0,z);const pole=box(.22,6,.22,0x444b4e);pole.position.y=3;p.add(pole);const bulb=new THREE.Mesh(new THREE.SphereGeometry(.55,12,8),new THREE.MeshStandardMaterial({color:0xfff2b0,emissive:0xffd86b,emissiveIntensity:2}));bulb.position.y=6;p.add(bulb);scene.add(p)}
+for(let z=-105;z<=105;z+=30){lamp(-14,z);lamp(14,z)}
+let selected=null,inside=false;
+const list=document.getElementById('houses');houses.forEach((h,i)=>{const b=document.createElement('button');b.className='house';b.textContent=h.userData.title;b.onclick=()=>select(h);list.appendChild(b)});
+function select(h){selected=h;document.querySelectorAll('.house').forEach((b,i)=>b.classList.toggle('active',houses[i]===h));document.getElementById('info').classList.add('show');document.getElementById('infoTitle').textContent=h.userData.title;document.getElementById('infoText').textContent='موديل مستقل • واجهة 3D • قابل لإضافة الأثاث والتفاصيل الداخلية';}
+function goHouse(){if(!selected)return;camera.position.set(selected.position.x+20,12,selected.position.z+20);controls.target.copy(selected.position);controls.update()}
+document.getElementById('goBtn').onclick=goHouse;
+document.getElementById('topView').onclick=()=>{camera.position.set(0,150,0);controls.target.set(0,0,0);controls.update()};
+document.getElementById('enterBtn').onclick=()=>{if(!selected)return;inside=!inside; if(inside){camera.position.set(selected.position.x,3,selected.position.z+7);controls.target.set(selected.position.x,3,selected.position.z-2)}else goHouse();controls.update();document.getElementById('enterBtn').textContent=inside?'خروج من البيت':'دخول البيت'};
+const keys={};addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll('.key').forEach(b=>{const k=b.dataset.k;b.onpointerdown=()=>keys[k]=true;b.onpointerup=()=>keys[k]=false;b.onpointerleave=()=>keys[k]=false});
+let last=performance.now();function animate(t){requestAnimationFrame(animate);const dt=Math.min((t-last)/1000,.05);last=t;const speed=18*dt;const dir=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;dir.normalize();const side=new THREE.Vector3().crossVectors(dir,camera.up).normalize();if(keys.w)camera.position.addScaledVector(dir,speed);if(keys.s)camera.position.addScaledVector(dir,-speed);if(keys.a)camera.position.addScaledVector(side,speed);if(keys.d)camera.position.addScaledVector(side,-speed);controls.target.add(new THREE.Vector3(0,0,0));controls.update();renderer.render(scene,camera)}requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+select(houses[0]);
+</script></body></html>
